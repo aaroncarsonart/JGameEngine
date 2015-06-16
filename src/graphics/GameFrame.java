@@ -27,11 +27,7 @@ public class GameFrame extends JFrame
 	 */
 	public GameFrame(){
 		super("Aaron's Game");
-		contentPane = this.getContentPane();
-		contentPane.setLayout(new BorderLayout());
-		JLabel label = new JLabel("Test");
-		label.setForeground(Color.WHITE);
-		contentPane.add(label, BorderLayout.SOUTH);
+		this.setLayout(new BorderLayout());
 	}
 		
 		

@@ -23,7 +23,7 @@ public class Game implements Runnable, Serializable
 	private static final long	serialVersionUID	= 1L;
 	
 	private GameDisplayPanel	displayPanel;
-	private GameFrame			frame;
+	private JFrame				frame;
 	
 	private boolean				running;
 	private Thread				gameThread;
@@ -38,8 +38,6 @@ public class Game implements Runnable, Serializable
 	 * Create a new Game.
 	 */
 	public Game() {
-		displayPanel = new GameDisplayPanel();
-		frame = new GameFrame();
 		running = false;
 		tps = new TpsCounter(this);
 		prevUpdate = System.currentTimeMillis();
@@ -55,6 +53,10 @@ public class Game implements Runnable, Serializable
 		try {
 			SwingUtilities.invokeAndWait(new Runnable() {
 				public void run() {
+					//frame.getContentPane().add(displayPanel, BorderLayout.CENTER);
+					displayPanel = new GameDisplayPanel();
+					
+					frame = new JFrame();
 					frame.getContentPane().add(displayPanel, BorderLayout.CENTER);
 					frame.pack();
 					frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
@@ -64,7 +66,7 @@ public class Game implements Runnable, Serializable
 			});
 			
 			// begin the game.
-			resume();
+			//resume();
 		}
 		catch (InvocationTargetException e) {
 			// TODO Auto-generated catch block
@@ -93,9 +95,9 @@ public class Game implements Runnable, Serializable
 			// ******************************************
 			// 2. update the graphics
 			// ******************************************
-			synchronized(displayPanel.getImageLock()){
-				updateGraphics();
-			}
+			//synchronized(displayPanel.getImageLock()){
+			//	updateGraphics();
+			//}
 			
 			// ******************************************
 			// 2. ensure frame rate
@@ -122,7 +124,7 @@ public class Game implements Runnable, Serializable
 	 * graphics update.
 	 */
 	public void updateGraphics(){
-		displayPanel.updateCompositeGraphics();		
+		//displayPanel.updateCompositeGraphics();		
 	}
 	
 	/**
