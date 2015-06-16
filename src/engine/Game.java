@@ -66,7 +66,7 @@ public class Game implements Runnable, Serializable
 			});
 			
 			// begin the game.
-			//resume();
+			resume();
 		}
 		catch (InvocationTargetException e) {
 			// TODO Auto-generated catch block
@@ -95,9 +95,9 @@ public class Game implements Runnable, Serializable
 			// ******************************************
 			// 2. update the graphics
 			// ******************************************
-			//synchronized(displayPanel.getImageLock()){
-			//	updateGraphics();
-			//}
+			synchronized(displayPanel.getImageLock()){
+				updateGraphics();
+			}
 			
 			// ******************************************
 			// 2. ensure frame rate
@@ -124,7 +124,7 @@ public class Game implements Runnable, Serializable
 	 * graphics update.
 	 */
 	public void updateGraphics(){
-		//displayPanel.updateCompositeGraphics();		
+		displayPanel.updateCompositeGraphics();		
 	}
 	
 	/**

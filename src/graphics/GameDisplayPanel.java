@@ -1,6 +1,5 @@
 package graphics;
 
-import java.awt.BorderLayout;
 import java.awt.Color;
 import java.awt.Dimension;
 import java.awt.Graphics;
@@ -9,176 +8,344 @@ import java.awt.GraphicsConfiguration;
 import java.awt.GraphicsEnvironment;
 import java.awt.RenderingHints;
 import java.awt.Transparency;
+import java.awt.image.BufferedImage;
+import java.awt.image.DataBufferInt;
 import java.awt.image.VolatileImage;
+import java.util.Random;
 
-import javax.swing.JFrame;
 import javax.swing.JPanel;
-import javax.swing.SwingUtilities;
 
+import utility.TpsCounter;
+
+/**
+ * Holds all data needed to render a Game to a GameWindow.  This includes
+ * Three BufferedImage layers (background, sprites, and foreground), their
+ * associated pixel buffers, and a composite image that scales quickly 
+ * for rendering on this GameDisplay.
+ * @author Aaron Carson
+ * @version Jun 15, 2015
+ */
 public class GameDisplayPanel extends JPanel
-{	
+{
 	
 	// ********************************************************************
 	// Static fields
 	// ********************************************************************
+	
 	private static final long	serialVersionUID	= 1L;
 	public static final int		WIDTH				= 16 * 16 * 2;	// 512 px
 	public static final int		HEIGHT				= 16 * 9 * 2;	// 288 px
 	public static final int		SCALE				= 1;
-
+																	
+	// ********************************************************************
+	// instance fields
+	// ********************************************************************
 	
-	// ********************************************************************
-	// Fields
-	// ********************************************************************
+	/** Generate random numbers. **/
+	private Random				random;
 	
-	private VolatileImage	compositeImage;
-	private Graphics2D		compositeGraphics;
-	private int				width	= WIDTH;
-	private int				height	= HEIGHT;
-	private double			ratio	= width / (double) height;
+	private BufferedImage		backgroundImage;
+	private BufferedImage		spriteImage;
+	private BufferedImage		foregroundImage;
 	
-	// ********************************************************************
-	// Constructor
-	// ********************************************************************
+	/**For iterating over graphics layers in proper drawing order. **/
+	private BufferedImage[]		imageLayers;
+	
+	/** The composite image of all graphics layers (speeds up scaling). **/
+	private VolatileImage		compositeImage;
+	private Graphics2D			compositeGraphics;
+	
+	private final Object		imageLock;
+	
+	private int[]				backgroundPixels;
+	private int[]				spritePixels;	
+	private int[]				foregroundPixels;
+	
+	/** Convenience array for iterating over the pixel buffers. **/
+	private int[][]				pixelLayers;
+	
+	/** Used to count updates in the paintComponent(Graphics g) method. **/
+	private TpsCounter			tps;
+	
+	private int width;
+	private int height;
+	
+	/** Ratio of the width to the height of the image. **/
+	private double ratio;
+	
+	// ***********************************************************************
+	// constructors
+	// ***********************************************************************
 	
 	/**
-	 * Create a new Render Area of the specified size.
-	 * 
-	 * @param width The width, in pixels.
-	 * @param height The height, in pixels.
+	 * Create a new GameDisplay instance, which manages a set of BufferedImages
+	 * representing the current image of the game.
 	 */
 	public GameDisplayPanel() {
 		super();
-		setPreferredSize(new Dimension(width, height));
-		
-		setSize(getPreferredSize());
-		// setBackground(Color.BLACK);
-		
+		width = WIDTH;
+		height = HEIGHT;
+		this.setPreferredSize(new Dimension(width * SCALE, height * SCALE));
+		ratio = width / (double) height;
+		System.out.printf("Ratio: %f5\n",ratio);
+				
 		GraphicsConfiguration gc = GraphicsEnvironment
-				.getLocalGraphicsEnvironment().getDefaultScreenDevice()
+				.getLocalGraphicsEnvironment()
+				.getDefaultScreenDevice()
 				.getDefaultConfiguration();
 		
-		compositeImage = gc.createCompatibleVolatileImage(width, height,
-				Transparency.TRANSLUCENT);
+		// initialize game graphics layers
+		backgroundImage = gc.createCompatibleImage(width, height, Transparency.TRANSLUCENT);
+		spriteImage    = gc.createCompatibleImage(width, height, Transparency.TRANSLUCENT);
+		foregroundImage = gc.createCompatibleImage(width, height, Transparency.TRANSLUCENT);
+		imageLayers = new BufferedImage[] {backgroundImage, spriteImage, foregroundImage};	
+				
+		// the lock
+		imageLock = new Object();
+		
+		// initialize composite VolatileImage (increases update performance)
+		compositeImage = gc.createCompatibleVolatileImage(width, height, Transparency.TRANSLUCENT);
 		compositeGraphics = compositeImage.createGraphics();
-		compositeGraphics.setRenderingHint(RenderingHints.KEY_ANTIALIASING,
-				RenderingHints.VALUE_ANTIALIAS_ON);
-		compositeGraphics.setRenderingHint(RenderingHints.KEY_RENDERING,
-				RenderingHints.VALUE_RENDER_QUALITY);
-	}
+		compositeGraphics.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
+		compositeGraphics.setRenderingHint(RenderingHints.KEY_RENDERING, RenderingHints.VALUE_RENDER_QUALITY);
 	
-	// ********************************************************************
-	// Methods
-	// ********************************************************************
+		// initialize pixel data buffers
+		backgroundPixels = ((DataBufferInt) backgroundImage.getRaster().getDataBuffer()).getData();
+		spritePixels = ((DataBufferInt) spriteImage.getRaster().getDataBuffer()).getData();
+		foregroundPixels = ((DataBufferInt) foregroundImage.getRaster().getDataBuffer()).getData();
+		pixelLayers = new int[][]{backgroundPixels, spritePixels, foregroundPixels};
+
+		drawBlueSquareFractal(backgroundPixels, width, height);
+		drawGreenSquareFractal(spritePixels, width, height);
+		drawRedSquareFractal(foregroundPixels, width, height);
+		
+		// other various fields
+		random = new Random();
+		tps = new TpsCounter(this);
+	}
+
+	// ***********************************************************************
+	// Fractals
+	// ***********************************************************************
 	
 	/**
-	 * PaintComponent updates the component by drawing the data of this
-	 * RenderArea's BufferedImage directly to the component.
-	 * <p>
-	 * Note 1: overwrite paint(Graphics g) to increase performance, but no added
-	 * components are drawn.
-	 * <p>
-	 * Note 2: overwrite paintComponent(Graphics g) to draw all extra layers.
-	 * 
-	 * @see javax.swing.JComponent#paintComponent(Graphics g)
+	 * Draws a blue square fractal to the specified pixel buffer.
+	 * @param pixels The pixel array to draw to.
+	 * @param width The width of the pixel buffer.
+	 * @param height The height of the pixel buffer.
 	 */
-	// public void paint(Graphics g) {
-	// super.paint(g);
+	public void drawBlueSquareFractal(int[] pixels, int width, int height) {
+		for (int x = 0; x < width; x++) {
+			for (int y = 0; y < height; y++) {
+				pixels[x + y * width] = (x ^ y) | 0xff000000;
+			}
+		}
+	}
+	
+	/**
+	 * Draws a green square fractal to the specified pixel buffer.
+	 * @param pixels The pixel array to draw to.
+	 * @param width The width of the pixel buffer.
+	 * @param height The height of the pixel buffer.
+	 */
+	public void drawGreenSquareFractal(int[] pixels, int width, int height) {
+		for (int x = 0; x < width; x++) {
+			for (int y = 0; y < height; y++) {
+				pixels[x + y * width] = (x ^ y) << 8 | 0xff000000;
+			}
+		}
+	}
+	/**
+	 * Draws a red square fractal to the specified pixel buffer.
+	 * @param pixels The pixel array to draw to.
+	 * @param width The width of the pixel buffer.
+	 * @param height The height of the pixel buffer.
+	 */
+	public void drawRedSquareFractal(int[] pixels, int width, int height) {
+		for (int x = 0; x < width; x++) {
+			for (int y = 0; y < height; y++) {
+				pixels[x + y * width] = (x ^ y) << 16 | 0xff000000;
+			}
+		}
+	}
+	
+	// ***********************************************************************
+	// Methods
+	// ***********************************************************************
+	
+	/**
+	 * Renders the compositeImage to the GameDisplayPanel, centered with a
+	 * black border at a maximum scale while preserving the aspect ratio.
+	 */
 	@Override
 	public void paintComponent(Graphics g) {
-		super.paintComponent(g);
-		render((Graphics2D) g);
-	}
-	
-	/**
-	 * Called by paintComponent(Graphics g) to update this FractalMaker. This
-	 * method needs to draw something to the Graphics2D parameter, or nothing
-	 * will show.
-	 * <p>
-	 * For experimentation purposes, change which methods are called in the
-	 * first section of the method to view different fractals in the GUI.
-	 * 
-	 * @param g The Graphics2D object to update.
-	 */
-	public void render(Graphics2D g) {
+		super.paintComponent(g);	
+		tps.tick();
 		
 		// the current width and height of the window.
 		int pw = getWidth();
 		int ph = getHeight();
 		
-		// set the background black
-		g.setColor(Color.BLACK);
-		g.fillRect(0, 0, pw, ph);
-		
-		// update and draw the composite graphics.
-		
-		int dLeft, dRight, dTop, dBottom;
-		
-		// if wider than tall, calculate width first
-		if (pw > ph) {
-			int dWidth = Math.min(pw, (int) (ph * ratio));
-			dLeft = (pw - dWidth) / 2;
-			dRight = (pw + dWidth) / 2;
-			
-			int dHeight = Math.min(ph, (int) (pw / ratio));
-			dTop = (ph - dHeight) / 2;
-			dBottom = (ph + dHeight) / 2;
+		// *************************
+		// Set the background black.
+		// *************************
+	    g.setColor(Color.BLACK);
+	    g.fillRect(0,0, pw, ph);
+	    
+	    // update and draw the composite graphics.
+	    
+	    int dLeft, dRight, dTop, dBottom;
+	    
+	    // ***************************************************
+	    // CASE 1: if wider than tall, calculate width first
+	    // ***************************************************
+	    if (pw > ph) {	    
+	    	int dWidth = Math.min(pw, (int) (ph * ratio));
+	    	dLeft = (pw - dWidth) / 2;
+	    	dRight = (pw + dWidth) / 2;
+	    	
+	    	int dHeight = Math.min(ph, (int) (pw / ratio));	    	
+	    	dTop = (ph - dHeight) / 2;
+	    	dBottom = (ph + dHeight) / 2;
+	    }
+	    // ***************************************************
+	    // CASE 2: if taller than wide
+	    // ***************************************************
+	    else{
+	    	dLeft = 0;
+	    	dRight = pw;
+	    	int dHeight = (int) (pw / ratio);
+	    	dTop = (ph - dHeight) / 2;
+	    	dBottom = (ph + dHeight) / 2;	    	
+	    }
+	    
+		// *********************************
+	    // draw the Composite, synchronized.
+		// *********************************
+		synchronized(imageLock){
+			((Graphics2D)g).drawImage(compositeImage, dLeft, dTop, dRight, dBottom, 0, 0, width, height, null);
 		}
-		// if taller than wide
-		else {
-			dLeft = 0;
-			dRight = pw;
-			int dHeight = (int) (pw / ratio);
-			dTop = (ph - dHeight) / 2;
-			dBottom = (ph + dHeight) / 2;
-			
-		}
-		System.out
-				.printf("panelWidth: %d panelHeight: %d dLeft: %d dRight: %d dTop: %d dBottom: %d\n",
-						pw, ph, dLeft, dRight, dTop, dBottom);
-		
-		// g.drawImage(compositeImage, 0, 0, panelWidth, panelHeight, 0, 0,
-		// width, height, null);
-		g.drawImage(compositeImage, dLeft, dTop, dRight, dBottom, 0, 0, width,
-				height, null);
+		// force update of the GameDisplay.
 		repaint();
 	}
 	
-	// *******************************************************************
-	// Static Testing Methods
-	// *******************************************************************
-	
 	/**
-	 * Create a new DrawPanel that renders teh given DrawObject.
-	 * 
-	 * @param drawObject The object to draw in the panel.
+	 * Draw each BufferedImage layer to the GameDisplay.
+	 * @param g The Graphics2D context to draw to.
 	 */
-	public static void createDisplay() {
-		SwingUtilities.invokeLater(new Runnable() {
-			public void run() {
-				GameDisplayPanel panel = new GameDisplayPanel();
-				JFrame frame = new JFrame("RenderArea Test");
-				frame.getContentPane().add(panel, BorderLayout.CENTER);
-				frame.pack();
-				frame.setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
-				frame.setLocationRelativeTo(null);
-				frame.setVisible(true);
-			}
-		});
+	public void updateCompositeGraphics(){
+		// draw buffered images directly to volatile image
+		int len = imageLayers.length;
+		for(int i = 0; i < len; i++){
+			compositeGraphics.drawImage(imageLayers[i], 0, 0, null);
+		}		
 	}
 	
-	// *******************************************************************
-	// MAIN
-	// *******************************************************************
+	// ************************************************************************
+	// Getters
+	// ************************************************************************
 	
 	/**
-	 * Test the render area in a JFrame. Run this method to view the results
-	 * using this code only.
-	 * 
-	 * @param args Does nothing.
+	 * Get the lock for rendering these images (needed for multi-threaded
+	 * updates to display).
 	 */
-	public static void main(String[] args) {
-		createDisplay();
+	public final Object getImageLock(){
+		return imageLock;
+	}
+
+	/**
+	 * @return the backgroundImage
+	 */
+	public BufferedImage getBackgroundImage() {
+		return backgroundImage;
+	}
+
+	/**
+	 * @return the foregroundImage
+	 */
+	public BufferedImage getForegroundImage() {
+		return foregroundImage;
+	}
+
+	/**
+	 * @return the imageLayers
+	 */
+	public BufferedImage[] getImageLayers() {
+		return imageLayers;
+	}
+
+	/**
+	 * @return the compositeImage
+	 */
+	public VolatileImage getCompositeImage() {
+		return compositeImage;
+	}
+
+	/**
+	 * @return the compositeGraphics
+	 */
+	public Graphics2D getCompositeGraphics() {
+		return compositeGraphics;
+	}
+
+	/**
+	 * @return the backgroundPixels
+	 */
+	public int[] getBackgroundPixels() {
+		return backgroundPixels;
+	}
+
+	/**
+	 * @return the spritePixels
+	 */
+	public int[] getSpritePixels() {
+		return spritePixels;
+	}
+
+	/**
+	 * @return the foregroundPixels
+	 */
+	public int[] getForegroundPixels() {
+		return foregroundPixels;
+	}
+
+	/**
+	 * @return the pixelLayers
+	 */
+	public int[][] getPixelLayers() {
+		return pixelLayers;
 	}
 	
+	/**
+	 * @return the SpriteImage
+	 */
+	public BufferedImage getSpriteImage() {
+		return spriteImage;
+	}
+	
+	/**
+	 * Get the aspect ratio of the game image.
+	 * @return The aspect ratio (ratio of width to height).
+	 */
+	public double getAspectRatio(){
+		return ratio;
+	}
+	
+	
+	/**
+	 * Get the width of the game image, in pixels (this value is constant).
+	 * For the GameDisplayPanel width, use getWidth().
+	 * @return The width of the game image, in pixels.
+	 */	public int getGameWidth(){
+		return width;
+	}
+	
+	/**
+	 * Get the height of the game image, in pixels (this value is constant).
+	 * For the GameDisplayPanel height, use getHeight().
+	 * @return The height of the game image, in pixels.
+	 */
+	public int getGameHeight(){
+		return height;
+	}
 }

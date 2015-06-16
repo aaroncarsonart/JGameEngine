@@ -20,12 +20,5 @@ public class Main implements Serializable
 	public static void main(String[] args){
 		Game game = new Game();
 		game.start();
-		
-		/*
-		TpsCounter tps = new TpsCounter();
-		while(true){
-			tps.tick();
-		}
-		*/
 	}
 }
