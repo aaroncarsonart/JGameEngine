@@ -104,7 +104,7 @@ public class GameDisplayPanel extends JPanel
 		imageLock = new Object();
 		
 		// initialize composite VolatileImage (increases update performance)
-		compositeImage = gc.createCompatibleVolatileImage(width, height, Transparency.OPAQUE);
+		compositeImage = gc.createCompatibleVolatileImage(width, height, Transparency.TRANSLUCENT);
 		compositeGraphics = compositeImage.createGraphics();
 		compositeGraphics.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
 		compositeGraphics.setRenderingHint(RenderingHints.KEY_RENDERING, RenderingHints.VALUE_RENDER_QUALITY);
@@ -125,7 +125,6 @@ public class GameDisplayPanel extends JPanel
 		
 		// set Swing data
 		this.setPreferredSize(new Dimension(width * SCALE, height * SCALE));
-		this.setSize(this.getPreferredSize());		
 	}
 
 	// ***********************************************************************
@@ -197,7 +196,7 @@ public class GameDisplayPanel extends JPanel
 	    int dLeft, dRight, dTop, dBottom;
 	    
 	    // if wider than tall, calculate width first
-	    if (panelWidth > panelHeight){	    
+	    if (panelWidth > panelHeight) {	    
 	    	int dWidth = Math.min(panelWidth, (int) (panelHeight * ratio));
 	    	dLeft = (panelWidth - dWidth) / 2;
 	    	dRight = (panelWidth + dWidth) / 2;
