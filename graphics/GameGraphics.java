@@ -1,5 +1,6 @@
 package graphics;
 
+import java.awt.AlphaComposite;
 import java.awt.Color;
 import java.awt.Dimension;
 import java.awt.Graphics;
@@ -32,9 +33,9 @@ public class GameGraphics implements Serializable
 	// ********************************************************************
 	
 	private static final long	serialVersionUID	= 1L;
-	public static final int		WIDTH				= 16 * 16 * 2;	// 512 px
-	public static final int		HEIGHT				= 16 * 9 * 2;	// 288 px
-	public static final int		SCALE				= 1;
+	public static final int		WIDTH				= 16 * 16;	// 512 px
+	public static final int		HEIGHT				= 16 * 9;	// 288 px
+	public static final int		SCALE				= 3;
 	
 	// ********************************************************************
 	// instance fields
@@ -46,6 +47,11 @@ public class GameGraphics implements Serializable
 	private BufferedImage		backgroundImage;
 	private BufferedImage		spriteImage;
 	private BufferedImage		foregroundImage;
+
+	private Graphics2D			backgroundGraphics;
+	private Graphics2D			spriteGraphics;
+	private Graphics2D			foregroundGraphics;
+
 	
 	/** For iterating over graphics layers in proper drawing order. **/
 	private BufferedImage[]		imageLayers;
@@ -63,10 +69,7 @@ public class GameGraphics implements Serializable
 	/** Convenience array for iterating over the pixel buffers. **/
 	private int[][]				pixelLayers;
 	
-	/** Used to count updates in the paintComponent(Graphics g) method. **/
-	private final FpsCounter	fpsCounter;
-	private final FpsThrottle	fpsThrottle;
-	
+	/** Used to count updates in the paintComponent(Graphics g) method. **/	
 	private final int			width;
 	private final int			height;
 	
@@ -102,26 +105,28 @@ public class GameGraphics implements Serializable
 				.getDefaultConfiguration();
 		
 		// initialize game graphics layers
-		backgroundImage = gc.createCompatibleImage(width, height,
-				Transparency.TRANSLUCENT);
-		spriteImage = gc.createCompatibleImage(width, height,
-				Transparency.TRANSLUCENT);
-		foregroundImage = gc.createCompatibleImage(width, height,
-				Transparency.TRANSLUCENT);
-		imageLayers = new BufferedImage[] { backgroundImage, spriteImage,
-				foregroundImage };
+		backgroundImage = gc.createCompatibleImage(width, height, Transparency.TRANSLUCENT);
+		spriteImage = gc.createCompatibleImage(width, height, Transparency.TRANSLUCENT);
+		foregroundImage = gc.createCompatibleImage(width, height, Transparency.TRANSLUCENT);
+		backgroundGraphics = backgroundImage.createGraphics();
+		backgroundGraphics.setRenderingHint(RenderingHints.KEY_ANTIALIASING,	RenderingHints.VALUE_ANTIALIAS_ON);
+		backgroundGraphics.setRenderingHint(RenderingHints.KEY_RENDERING, RenderingHints.VALUE_RENDER_QUALITY);
+		//backgroundGraphics.setComposite(AlphaComposite.getInstance(AlphaComposite.SRC_OVER));
+		
+		spriteGraphics = spriteImage.createGraphics();
+		foregroundGraphics = foregroundImage.createGraphics();
+		
+		
+		imageLayers = new BufferedImage[] { backgroundImage, spriteImage, foregroundImage };
 		
 		// the lock
 		imageLock = new Object();
 		
 		// initialize composite VolatileImage (increases update performance)
-		compositeImage = gc.createCompatibleVolatileImage(width, height,
-				Transparency.TRANSLUCENT);
+		compositeImage = gc.createCompatibleVolatileImage(width, height, Transparency.TRANSLUCENT);
 		compositeGraphics = compositeImage.createGraphics();
-		compositeGraphics.setRenderingHint(RenderingHints.KEY_ANTIALIASING,
-				RenderingHints.VALUE_ANTIALIAS_ON);
-		compositeGraphics.setRenderingHint(RenderingHints.KEY_RENDERING,
-				RenderingHints.VALUE_RENDER_QUALITY);
+		compositeGraphics.setRenderingHint(RenderingHints.KEY_ANTIALIASING,	RenderingHints.VALUE_ANTIALIAS_ON);
+		compositeGraphics.setRenderingHint(RenderingHints.KEY_RENDERING, RenderingHints.VALUE_RENDER_QUALITY);
 		
 		// initialize pixel data buffers
 		backgroundPixels = ((DataBufferInt) backgroundImage.getRaster()
@@ -133,14 +138,12 @@ public class GameGraphics implements Serializable
 		pixelLayers = new int[][] { backgroundPixels, spritePixels,
 				foregroundPixels };
 		
-		drawBlueSquareFractal(backgroundPixels, width, height);
-		drawGreenSquareFractal(spritePixels, width, height);
-		drawRedSquareFractal(foregroundPixels, width, height);
+		//drawBlueSquareFractal(backgroundPixels, width, height);
+		//drawGreenSquareFractal(spritePixels, width, height);
+		//drawRedSquareFractal(foregroundPixels, width, height);
 		
 		// other various fields
 		random = new Random();
-		fpsCounter = new FpsCounter(this);
-		fpsThrottle = new FpsThrottle(180);
 	}
 	
 	// ***********************************************************************
@@ -201,7 +204,7 @@ public class GameGraphics implements Serializable
 	 * 
 	 * @param g The Graphics2D context to draw to.
 	 */
-	public void updateCompositeGraphics() {
+	public void updateComposite() {
 		// draw buffered images directly to volatile image
 		int len = imageLayers.length;
 		for (int i = 0; i < len; i++) {
@@ -317,5 +320,25 @@ public class GameGraphics implements Serializable
 	public int getHeight() {
 		return height;
 	}
-	
+
+	/**
+	 * @return the backgroundGraphics
+	 */
+	public Graphics2D getBackgroundGraphics() {
+		return backgroundGraphics;
+	}
+
+	/**
+	 * @return the spriteGraphics
+	 */
+	public Graphics2D getSpriteGraphics() {
+		return spriteGraphics;
+	}
+
+	/**
+	 * @return the foregroundGraphics
+	 */
+	public Graphics2D getForegroundGraphics() {
+		return foregroundGraphics;
+	}
 }

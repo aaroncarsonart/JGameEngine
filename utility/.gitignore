@@ -1,3 +1,16 @@
 /FpsCounter.class
 /FpsThrottle.class
 /Pair.class
+/Direction.class
+/Position.class
+/QuadNode.class
+/QuadPosition.class
+/Quad.class
+/Tile.class
+/Maze.class
+/Graph.class
+/MazeBranchAccumulator$Cell.class
+/MazeBranchAccumulator$CellComparator.class
+/MazeBranchAccumulator$ReverseCellComparator.class
+/MazeBranchAccumulator.class
+/Difficulty.class

@@ -1,7 +1,12 @@
 package engine;
 
+import engine.mode.ElevationMapMode;
+import engine.mode.ExploreMode;
+import engine.mode.GameMode;
+import engine.mode.LineGraphMode;
 import graphics.GameDisplayPanel;
 import graphics.GameFrame;
+import graphics.GameGraphics;
 
 import java.awt.BorderLayout;
 import java.io.Serializable;
@@ -9,9 +14,8 @@ import java.lang.reflect.InvocationTargetException;
 
 import javax.swing.JFrame;
 import javax.swing.SwingUtilities;
-import javax.swing.UIManager;
 
-import sound.SoundEffects;
+import terrain.TerrainGenerator;
 import utility.FpsCounter;
 import utility.FpsThrottle;
 
@@ -25,9 +29,13 @@ public class Game implements Runnable, Serializable
 {
 	private static final long	serialVersionUID	= 1L;
 	public static final String	NAME = "JGameEngine";
+	public static final int FRAME_RATE = 60;
 	
-	private GameDisplayPanel	displayPanel;
 	private GameFrame			frame;
+	private GameDisplayPanel	displayPanel;
+	private GameMode			exploreMode;
+	private GameMode			currentMode;
+	private GameGraphics		currentGraphics;
 	
 	private boolean				running;
 	private Thread				gameThread;
@@ -41,10 +49,49 @@ public class Game implements Runnable, Serializable
 	public Game() {
 		running = false;
 		fpsCounter = new FpsCounter(this);
-		fpsThrottle = new FpsThrottle(60);
-		System.out.printf("%d fps, maxFrameWait: %d ms\n", fpsThrottle.getFrameRate(), fpsThrottle.getMaximumWait());
-		
+		fpsThrottle = new FpsThrottle(FRAME_RATE);
+		System.out.printf("%d fps, maxFrameWait: %d ms\n", fpsThrottle.getFrameRate(), fpsThrottle.getMaximumWait());	
 		inputHandler = new InputHandler();
+		
+		//testExploreMode();
+		//testSubdivideWithGraphMode();
+		testElevationMapMode();
+	}
+	
+	/**
+	 * Use GraphMode for the Game.
+	 */
+	private void testElevationMapMode(){
+		double[][] values = TerrainGenerator.diamondSquareAlgorithm(2, -100, 100, 0.5);
+		setGameMode(new ElevationMapMode(values));
+	}
+	
+	/**
+	 * Use GraphMode for the Game.
+	 */
+	private void testSubdivideWithGraphMode(){
+		double[] values = TerrainGenerator.testSubdividing();
+		setGameMode(new LineGraphMode(values));
+	}
+	
+	/**
+	 * Use ExploreMode for the Game.
+	 */
+	private void testExploreMode(){
+		setGameMode(new ExploreMode());
+	}
+
+	/**
+	 * Set the current GameMode to be used for this game.
+	 * @param mode The new GameMode.
+	 */
+	public void setGameMode(GameMode mode){
+		currentMode = mode;
+		currentGraphics = mode.getGameGraphics();
+		if (frame != null){
+			frame.setName(getGameName());
+		}
+		
 	}
 	
 	/**
@@ -55,15 +102,17 @@ public class Game implements Runnable, Serializable
 			GameFrame.tryAppleLookAndFeel();
 			SwingUtilities.invokeAndWait(new Runnable() {
 				public void run() {
-					displayPanel = new GameDisplayPanel();
-					frame = new GameFrame(NAME);
+					displayPanel = new GameDisplayPanel(currentMode.getGameGraphics());
+					frame = new GameFrame(getGameName());
+					//frame.setUndecorated(true);
 					frame.addKeyListener(inputHandler);
 					frame.getContentPane().add(displayPanel, BorderLayout.CENTER);
 					frame.pack();
+					//frame.setExtendedState(JFrame.MAXIMIZED_BOTH);
 					frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
 					frame.setLocationRelativeTo(null);
 					frame.setVisible(true);
-				}
+					}
 			});
 			
 			// begin the game.
@@ -80,6 +129,14 @@ public class Game implements Runnable, Serializable
 	}
 	
 	/**
+	 * Get the current name of the game (to be displayed in the Frame).
+	 * @return The name.
+	 */
+	public final String getGameName(){
+		return NAME + " - " + currentMode.getName();
+	}
+	
+	/**
 	 * Update and manage the entire game state.
 	 */
 	@Override
@@ -90,19 +147,19 @@ public class Game implements Runnable, Serializable
 			// ******************************************
 			// 1. update the game state
 			// ******************************************
-			update();
+			currentMode.update();
 			
 			// ******************************************
 			// 2. update the graphics
 			// ******************************************
-			synchronized(displayPanel.getImageLock()){
-				updateGraphics();
+			synchronized(currentGraphics.getImageLock()){
+				currentGraphics.updateComposite();
 			}
 			
 			// ******************************************
 			// 2. ensure frame rate
 			// ******************************************
-			fpsCounter.tick();
+			//fpsCounter.tick();
 			fpsThrottle.throttle();
 		}
 	}
@@ -113,14 +170,6 @@ public class Game implements Runnable, Serializable
 	 */
 	public void update(){
 		
-	}
-	
-	/**
-	 * Specialty method that limits what must be synchronized on the 
-	 * graphics update.
-	 */
-	public void updateGraphics(){
-		displayPanel.updateCompositeGraphics();		
 	}
 	
 	/**

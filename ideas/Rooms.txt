@@ -1,0 +1,128 @@
+Room and Area Designs
+---------------------
+
+Regions, Materials and Features
+
+Now that this Rogue-like game finally has a map navigation design with decent
+collision detection algorithms in place, I can look beyond the basic program
+structure and look to the game design itself.
+
+One very important feature of this Rogue-like game is random map generation.
+These can be as simple as interconnected dungeon rooms, or as complicated as
+something like MineCraft.
+
+I want each map to be defined by a set of Regions and Features.  These Regions
+each have rules to represent some type of land or material.  They can be 
+rigid and structural like buildings or corridors; alternatively, they can have
+curves and fluid like banks of rock, sand, dirt, or grass.
+
+By including these sets of well-defined Regions in a Map and specifying some
+customizing parameters, the map itself is defined by these rules.
+
+Features are a layer on top of the Regions.  Some Regions have their own inner 
+Feature sets that are applied; other Features can be applied independently.
+Features can include the contents of a space, including Items, Treasure, 
+Inhabitants such as Creatures, NPCs, and Monsters/Enemies.
+
+To differentiate between if a concept should be represented by a Region or a
+Feature, the Regions define the space to be explored, while Features define
+what populates that space.
+
+
+Structures and Materials
+------------------------
+
+Structures define structures of Regions are built into Maps.   These Structures
+are made of various Materials.  Structures are used to build components, and
+are temporary in the construction of a Map.
+
+Examples of these entities:
+
+Map:
+----
+* Wilderness
+* Dungeon
+* Forest
+* Grassland
+* Icy Tundra
+* Mountains
+* Town
+
+
+Regions:
+--------
+* Grassy Field
+* Hill
+* Building
+* Dungeon
+
+Features:
+---------
+* Treasures
+* Bushes
+* Trees
+* Doors
+* Furniture
+* Adornments
+* NPCs
+* Enemies
+
+Materials:
+----------
+* Wood
+* Dirt
+* Stone Materials
+* Iron
+* Grass
+
+Structures:
+-----------
+* Rooms
+* Passages
+* Curved areas
+
+
+
+Materials have a set of graphics and rules for how to render groups of them.
+Regions and Structures also have their own rules for how intersecting boundaries
+of these regions render.
+
+For instance, the the boundaries of grass and dirt have a transition square 
+that can be drawn over one or the other so that the grass appears to grow over 
+the second material, and looks to be on top of it.
+
+Each time a Map is loaded for the player to explore, if the map has not been
+visited before, it is created at that point.  Then, at that point and every
+point afterward that the map is visited, the graphics are rendered to images
+for all except for the sprite layers, which are each independently redrawn
+between the background and the foreground for efficiency.
+
+Materials and Features are remembered for each Tile of the map, but Structures
+and Regions exist only to define and generate the Map; their state is not 
+needed beyond a Map's creation. 
+
+Each Map also needs at least one Edge to another Map, so it can be accessed.
+These edges can be directed or undirected.  Each directed edge is handled as a
+Exit, Destination pair that can either connect two Maps together from a tile 
+to a tile, or can connect to points of a single Map together.
+
+Terrain Generation Algorithms:
+------------------------------
+* Perlin Noise http://notch.tumblr.com/post/3746989361/terrain-generation-part-1
+* Value Noise http://www.avanderw.co.za/tag/terrain/
+* Diamond-Square Algorithm http://blog.habrador.com/2013/02/how-to-generate-random-terrain.html
+* Hill Algorithm
+* Particle Deposition
+** Fractal http://www.gameprogrammer.com/fractal.html
+
+
+-	0  1  2  3  4  5  6  7  8  9
+	1
+	2
+-	3
+	4
+-	5
+	6
+-	7	
+	8
+-	9

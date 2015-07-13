@@ -21,7 +21,7 @@ public enum Command {
 		if (!pressed) {
 			pressed = true;
 			consumed = false;
-			System.out.printf("%s pressed\n", this.name());
+			//System.out.printf("%s pressed\n", this.name());
 		}
 	}
 	
@@ -32,7 +32,7 @@ public enum Command {
 		if(pressed){
 			pressed = false;
 			consumed = true;
-			System.out.printf("%s released\n", this.name());
+			//System.out.printf("%s released\n", this.name());
 		}
 	}
 	
