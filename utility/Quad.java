@@ -6,15 +6,15 @@ package utility;
  * @author Aaron Carson
  * @version Jun 30, 2015
  */
-public final class Quad
+public class Quad
 {	
-	/** The top-left x coordinate position.*/
+	/** The center x coordinate position.*/
 	public double x;
-	/** The top-left y coordinate position.*/
+	/** The center y coordinate position.*/
 	public double y;	
-	/** The width of the Quad.*/
+	/** The half-width of the Quad.*/
 	public double halfWidth;
-	/** The height of the Quad.*/
+	/** The half-height of the Quad.*/
 	public double halfHeight;
 	
 	/**
@@ -57,23 +57,39 @@ public final class Quad
 				// adjust based on relative position.
 				if (this.x < quad.x){
 					this.x = quad.x - quad.halfWidth - this.halfWidth;
+					//System.out.println("collides!");
 				}
 				else{
 					this.x = quad.x + quad.halfWidth + this.halfWidth;
+					//System.out.println("collides!");
 				}				
 			}
 			else{
 				// adjust based on relative position.
 				if (this.y < quad.y){
 					this.y = quad.y - quad.halfHeight - this.halfHeight;
+					//System.out.println("collides!");
 				}
 				else{
 					this.y = quad.y + quad.halfHeight + this.halfHeight;
+					//System.out.println("collides!");
 				}
 			}
 			return true;
 		}
 		return false;
+	}
+	
+	/**
+	 * Checks if the rectangle is off screen of the bounds of a map of given
+	 * width and height.
+	 * @param width The width of the map to check.
+	 * @param height The height of the map to check.
+	 * @return True fi the screen is off screen.
+	 */
+	public boolean offScreen(int width, int height){
+		return halfWidth  > x || x >= width  - halfWidth || 
+			   halfHeight > y || y >= height - halfHeight; 
 	}
 	
 	/**

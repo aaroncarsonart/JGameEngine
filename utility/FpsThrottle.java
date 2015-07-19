@@ -20,7 +20,8 @@ public class FpsThrottle
 	public FpsThrottle(int frameRate){
 		this.frameRate = frameRate;
 		this.maximumWait = 1000 / frameRate;
-		this.prevUpdate = System.currentTimeMillis();
+		this.prevUpdate = System.nanoTime();
+		//this.prevUpdate = System.currentTimeMillis();
 	}
 	
 	/**
@@ -28,13 +29,17 @@ public class FpsThrottle
 	 * time, and sleep the current thread.
 	 */
 	public void throttle(){
+		
 		try {
-			Thread.sleep(Math.max(0, maximumWait - (System.currentTimeMillis() - prevUpdate)));
-			prevUpdate = System.currentTimeMillis();
+			Thread.sleep(Math.max(0, maximumWait - (System.nanoTime() - prevUpdate)/1000000));
+			prevUpdate = System.nanoTime();
+			//Thread.sleep(Math.max(0, maximumWait - (System.currentTimeMillis() - prevUpdate)));
+			//prevUpdate = System.currentTimeMillis();
 		}
 		catch (InterruptedException e) {
 			e.printStackTrace();
 		}
+		
 	}
 	
 	public int getMaximumWait(){

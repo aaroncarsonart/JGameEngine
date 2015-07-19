@@ -5,6 +5,7 @@ import java.awt.event.KeyListener;
 
 /**
  * Handles inputs for the Game, and reports results in Commands.
+ * 
  * @author Aaron Carson
  * @version Jun 17, 2015
  */
@@ -12,10 +13,13 @@ public class InputHandler implements KeyListener
 {
 	
 	@Override
-	public void keyTyped(KeyEvent e) {}
+	public void keyTyped(KeyEvent e) {
+		// System.out.println("keyTyped: " + e.getKeyCode());
+	}
 	
 	@Override
 	public void keyPressed(KeyEvent e) {
+		// System.out.println("keyPressed: " + e.getKeyCode());
 		setCommandPressedFrom(e.getKeyCode(), true);
 	}
 	
@@ -27,10 +31,11 @@ public class InputHandler implements KeyListener
 	/**
 	 * Switches over a set of key codes, and if one matches it sets the
 	 * associated Command's pressed value.
+	 * 
 	 * @param e The KeyEvent from which to get the keycode.
 	 * @param pressed
 	 */
-	private void setCommandPressedFrom(int keycode, boolean pressed){
+	private void setCommandPressedFrom(int keycode, boolean pressed) {
 		switch (keycode) {
 		
 		// *******************************************
@@ -84,7 +89,7 @@ public class InputHandler implements KeyListener
 		case KeyEvent.VK_X:
 			Command.OK.setPressed(pressed);
 			break;
-			
+		
 		// *******************************************
 		// CANCEL
 		// *******************************************
@@ -95,8 +100,33 @@ public class InputHandler implements KeyListener
 		case KeyEvent.VK_Z:
 			Command.CANCEL.setPressed(pressed);
 			break;
+		
+		// *******************************************
+		// MAP
+		// *******************************************
+		case KeyEvent.VK_M:
+			Command.MAP.setPressed(pressed);
+			break;
+		
+		// *******************************************
+		// HELP
+		// *******************************************
+		case KeyEvent.VK_H:
+			Command.HELP.setPressed(pressed);
+			break;
+		// *******************************************
+		// TIME
+		// *******************************************
+		case KeyEvent.VK_T:
+			Command.TIME.setPressed(pressed);
+			break;
+		// *******************************************
+		// REST
+		// *******************************************
+		case KeyEvent.VK_R:
+			Command.REST.setPressed(pressed);
+			break;
 		}
-
 	}
 	
 }

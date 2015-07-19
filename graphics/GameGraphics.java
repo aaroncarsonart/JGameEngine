@@ -33,8 +33,8 @@ public class GameGraphics implements Serializable
 	// ********************************************************************
 	
 	private static final long	serialVersionUID	= 1L;
-	public static final int		WIDTH				= 16 * 16;	// 512 px
-	public static final int		HEIGHT				= 16 * 9;	// 288 px
+	public static final int		WIDTH				= (int)(16 * 16); //24 * 16 ;	// 512 px
+	public static final int		HEIGHT				= (int)(16 * 9);  //24 * 9 ;	// 288 px
 	public static final int		SCALE				= 3;
 	
 	// ********************************************************************

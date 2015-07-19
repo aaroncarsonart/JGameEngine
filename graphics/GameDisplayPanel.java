@@ -1,22 +1,19 @@
 package graphics;
 
 import java.awt.Color;
+import java.awt.Cursor;
 import java.awt.Dimension;
 import java.awt.Graphics;
 import java.awt.Graphics2D;
-import java.awt.GraphicsConfiguration;
-import java.awt.GraphicsEnvironment;
-import java.awt.RenderingHints;
-import java.awt.Transparency;
+import java.awt.Point;
+import java.awt.Toolkit;
 import java.awt.image.BufferedImage;
-import java.awt.image.DataBufferInt;
 import java.awt.image.VolatileImage;
-import java.util.Random;
 
 import javax.swing.JPanel;
 
-import utility.FpsThrottle;
 import utility.FpsCounter;
+import utility.FpsThrottle;
 
 /**
  * Holds all data needed to render a Game to a GameWindow. This includes Three
@@ -63,6 +60,16 @@ public class GameDisplayPanel extends JPanel
 		setGameGraphics(initialGameGraphics);
 		fpsCounter = new FpsCounter(this);
 		fpsThrottle = new FpsThrottle(60);
+		
+		// Transparent 16 x 16 pixel cursor image.
+		BufferedImage cursorImg = new BufferedImage(16, 16, BufferedImage.TYPE_INT_ARGB);
+
+		// Create a new blank cursor.
+		Cursor blankCursor = Toolkit.getDefaultToolkit().createCustomCursor(
+		    cursorImg, new Point(0, 0), "blank cursor");
+
+		// Set the blank cursor to the JFrame.
+		this.setCursor(blankCursor);
 	}
 		
 	// ***********************************************************************
@@ -79,8 +86,9 @@ public class GameDisplayPanel extends JPanel
 		this.width = currentGraphics.getWidth();
 		this.height = currentGraphics.getHeight();
 		this.ratio = currentGraphics.getAspectRatio();
-		this.setPreferredSize(new Dimension(Math.max(500, width), Math.max(500, height)));
-		
+		//this.setPreferredSize(new Dimension(Math.max(500, width), Math.max(500, height)));
+		//this.setMinimumSize(new Dimension(width, height));
+		this.setPreferredSize(new Dimension(width * GameGraphics.SCALE, height * GameGraphics.SCALE));
 		//this.compositeGraphics = currentGraphics.getCompositeGraphics();
 	}
 	

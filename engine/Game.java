@@ -15,6 +15,7 @@ import java.lang.reflect.InvocationTargetException;
 import javax.swing.JFrame;
 import javax.swing.SwingUtilities;
 
+import party.PlayerCharacter;
 import terrain.TerrainGenerator;
 import utility.FpsCounter;
 import utility.FpsThrottle;
@@ -29,7 +30,7 @@ public class Game implements Runnable, Serializable
 {
 	private static final long	serialVersionUID	= 1L;
 	public static final String	NAME = "JGameEngine";
-	public static final int FRAME_RATE = 60;
+	public static final int FRAME_RATE = 120;
 	
 	private GameFrame			frame;
 	private GameDisplayPanel	displayPanel;
@@ -52,10 +53,10 @@ public class Game implements Runnable, Serializable
 		fpsThrottle = new FpsThrottle(FRAME_RATE);
 		System.out.printf("%d fps, maxFrameWait: %d ms\n", fpsThrottle.getFrameRate(), fpsThrottle.getMaximumWait());	
 		inputHandler = new InputHandler();
-		
-		//testExploreMode();
+				
+		testExploreMode();
 		//testSubdivideWithGraphMode();
-		testElevationMapMode();
+		//testElevationMapMode();
 	}
 	
 	/**

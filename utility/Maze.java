@@ -3,6 +3,7 @@ import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.Iterator;
 import java.util.LinkedList;
+import java.util.List;
 import java.util.PriorityQueue;
 import java.util.Queue;
 import java.util.Random;
@@ -611,6 +612,249 @@ public class Maze {
         }
     }
     
+	/**
+	 * Create a new Dungeon with the given parameters.
+	 * @param width The width in tiles.
+	 * @param height The height in tiles.
+	 * @param rooms The number of rectangular rooms to randomly generate in the
+	 * space.
+	 * @return a new dungeon of given size with the given number of
+	 * interconnected rooms.
+	 */
+	public static final Maze createWalledDungeon(int width, int height, int rooms){
+
+		// 0. make dungeon with room for an outer wall.
+		Maze m = new Maze(width + 2, height + 2);
+				
+		// 4. Depth first search through the dungeon like the maze.
+		/*
+		//local values needed for digging out the maze
+        ArrayList<Position> checklist = new ArrayList<Position>();
+        int halfWidth = width / 2;
+        int halfHeight = height / 2;
+        boolean visited[][] = new boolean[halfWidth][halfHeight];
+
+        boolean digging = true;
+        Random rand = new Random();
+        Position digger = new Position(0, 0);
+        visited[digger.x()][digger.y()] = true;
+
+        //dig out the maze
+        while (digging) {
+
+            //get neighboring positions
+            ArrayList<Position> neighbors = new ArrayList<Position>();
+            neighbors.add(digger.above());
+            neighbors.add(digger.below());
+            neighbors.add(digger.left());
+            neighbors.add(digger.right());
+
+            Iterator<Position> it = neighbors.iterator();
+
+            //remove neighbors outside of maze
+            while (it.hasNext()) {
+                Position pos = it.next();
+                int x = pos.x();
+                int y = pos.y();
+
+                // remove if position has already been visited, or is out of bounds
+                if (!(0 <= x && x < halfWidth && 0 <= y && y < halfHeight)
+                        || visited[x][y]) it.remove();
+
+            }
+
+            //if there exist at least one valid neighbor to dig to
+            if (neighbors.size() > 0) {
+                checklist.add(new Position(digger));
+
+                //randomly select a new digging target
+                Position target = neighbors.get(rand.nextInt(neighbors.size()));
+
+                //calculate the coordinates to dig out of the maze array
+                int x1 = digger.x() * 2 + 1;
+                int x2 = target.x() * 2 + 1;
+
+                int digX;
+                if (x1 == x2) digX = x1;
+                else digX = Math.min(x1, x2) + 1;
+
+                int y1 = digger.y() * 2 + 1;
+                int y2 = target.y() * 2 + 1;
+
+                int digY;
+                if (y1 == y2) digY = y1;
+                else digY = Math.min(y1, y2) + 1;
+
+                // dig out the path inbetween digger and target
+                m.maze[digX][digY] = PATH;
+
+                // mark as visited
+                visited[target.x()][target.y()] = true;
+
+                // set target position as new digger
+                digger = new Position(target);
+
+            }
+
+            // otherwise
+            else {
+
+                //digger position is removed from the checklist
+                checklist.remove(digger);
+
+                // finished if the algorithm is empty; otherwise, get another random position
+                if (checklist.size() == 0) return m;
+                else digger = checklist.get(rand.nextInt(checklist.size()));
+            }
+        }
+		 */
+		// 5. Done.
+		return m;		
+	}
+	
+public static Maze createRandomWalledRoomedMaze(int width, int height, int rooms){
+    	
+    	// step 1: create a walled maze.
+    	Maze m = generateRandomWalledMaze(width, height);
+    	
+    	Random random = new Random();
+		//boolean[][] visited = new boolean[width + 2][height + 2];		
+		ArrayList<Quad> quads = new ArrayList<Quad>(rooms);
+		
+		int minRoomSize = 3;
+		int maxRoomSize = 10;
+		int offsetWidth  = Math.max(maxRoomSize, width / 4) - minRoomSize;
+		int offsetHeight = Math.max(maxRoomSize, height / 4 - minRoomSize);
+		
+		//System.out.printf("maxWidth: %d maxHeight: %d\n", maxWidth, maxHeight);
+		
+		
+		// 2. remove rooms and make as paths and visited.
+		for(int i = 0; i < rooms; i++){
+			int y1  = 1 + random.nextInt(height - minRoomSize);
+			int y2  = Math.min(height, y1 + minRoomSize + random.nextInt(offsetWidth));
+			int x1  = 1 + random.nextInt(width - minRoomSize);
+			int x2  =  Math.min(width, x1 + minRoomSize + random.nextInt(offsetHeight));
+			double xSize = Math.abs(x1 - x2);
+			double ySize = Math.abs(y1 - y2);
+			double hw = xSize / 2;
+			double hh = xSize / 2;
+			double cx = Math.min(x1, x2) + hw;
+			double cy = Math.min(y1, y2) + hh;
+			
+			Quad quad = new Quad(cx, cy, hw, hh);
+			for(Quad q : quads){
+				quad.fixIfCollides(q);
+			}
+			if (!quad.offScreen(width, height)){
+				quads.add(quad);
+				for(int x = (int)quad.getLeftX(); x < quad.getRightX(); x++){
+					for(int y = (int)quad.getTopY(); y < quad.getBottomY(); y++){
+						m.maze[x][y] = PATH;
+					}	
+				}
+			}
+		}
+		
+		// 3. Add 1 - 2 unvisited paths on the perimeter of each room.
+		for(int i = 0; i < quads.size(); i++){
+				Quad q = quads.get(i);
+				int k = random.nextInt(4);
+				int x = 0, y = 0;
+				switch(k){
+				// add to left
+				case 0:
+					x = (int) q.getLeftX() - 1;
+					y = random.nextInt((int)q.getHeight()) + (int)q.getTopY();
+					break;
+
+					// add to right
+				case 1:
+					x = (int) q.getRightX() + 1;
+					y = random.nextInt((int)q.getHeight()) + (int)q.getTopY();
+					break;
+					
+					// add to above
+				case 2:
+					y = (int) q.getTopY() - 1;
+					x = random.nextInt((int)q.getWidth()) + (int)q.getLeftX();
+					break;
+					
+					// add to below
+				case 3:
+					y = (int) q.getBottomY() + 1;
+					x = random.nextInt((int)q.getWidth()) + (int)q.getLeftX();
+					break;
+				}
+				
+				m.maze[x][y] = PATH;
+		}
+
+		return m;
+    	
+    }
+    
+    /**
+     * Generate a room that randomly grows until a percentage is reached.
+     * @param width The width of the cells to save.
+     * @param height The height of the cells to save.
+     * @param percent
+     * @return
+     */
+	public static Maze generateRandomShapedRoom(int width, int height, double percent, boolean tunnels){
+		
+		Maze m = new Maze(width, height, WALL);
+		Random r = new Random();
+		boolean[][] visited = new boolean[width][height];
+		
+		// dig out the center square.
+		Position digger = new Position(width / 2, height / 2);
+		m.maze[digger.x()][digger.y()] = PATH;
+		visited[digger.x()][digger.y()] = true;
+		int count = 1;
+								
+		int max = width * height;
+		
+		// create a room of max size of 
+		while (count / max < percent){	
+			count++;
+			// 1. find a bordering neighbor.
+			// dig out any unoccupied neighbors.
+			List<Position> neighbors = new ArrayList<Position>();
+			neighbors.add(digger.above());
+			neighbors.add(digger.below());
+			neighbors.add(digger.left());
+			neighbors.add(digger.right());
+			neighbors.add(new Position(digger.x() - 1, digger.y() - 1));
+			neighbors.add(new Position(digger.x() - 1, digger.y() + 1));
+			neighbors.add(new Position(digger.x() + 1, digger.y() - 1));
+			neighbors.add(new Position(digger.x() + 1, digger.y() + 1));
+			
+			for(int i = neighbors.size() - 1; i >= 0; i--){
+				Position next = neighbors.get(i);
+				if(m.withinBounds(next)){
+					if(visited[next.x()][next.y()]){
+						if (tunnels) neighbors.remove(i);
+						continue;
+					}
+					else if (m.maze[next.x()][next.y()] == WALL){
+						digger = next;
+						m.maze[next.x()][next.y()] = PATH;
+						visited[next.x()][next.y()] = true;					
+						count ++;
+					}
+				}
+			}
+			
+			if(neighbors.isEmpty()) break;
+			 digger = neighbors.get(r.nextInt(neighbors.size()));
+			
+		}
+		
+		
+		return m;
+	}
+
     /**
      * Convenience method for hard-coding generated mazes in code.
      * @param path The string to represent a path as.
@@ -636,9 +880,11 @@ public class Maze {
 
     private static void testRandom(int width, int height) {
         Maze m;
-        m = Maze.generateRandomWalledMaze(width, height);
-        m.setDifficulty(Difficulty.EASY);
+        m = Maze.createWalledDungeon(width, height, 20);
+        //m = Maze.generateRandomWalledMaze(width, height);
+        //m.setDifficulty(Difficulty.EASY);
         System.out.println(m.toString());
+        
     }
     
     // ************************************************************************
@@ -665,7 +911,24 @@ public class Maze {
 
         // use default values
         else {
-            testRandom(30, 30);
+            //testRandom(100, 100);
+        	boolean tunnels = true;
+        	boolean cavern = false;
+        	Maze m;
+        	for (double p = 0.1; p < 1.0; p += 0.1){
+        		long t = System.currentTimeMillis();
+        		System.out.printf("\n%2.2f%% Cavern\n", p);
+        		m = generateRandomShapedRoom(50,50, p, cavern);
+                System.out.println(m.toString());   
+
+        		System.out.printf("\n%2.2f%% Tunnels\n", p);
+        		m = generateRandomShapedRoom(50,50, p, tunnels);
+                System.out.println(m.toString());   
+                System.out.printf("elapsed: %.5f s.\n", (System.currentTimeMillis() - t) / 1000.0);
+        	}
+
+        	
+    	
         }
     }
 
