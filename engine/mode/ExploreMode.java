@@ -1,6 +1,10 @@
 package engine.mode;
 
 import engine.Command;
+import engine.Game;
+import graphics.BasicBorderedTile;
+import graphics.Images;
+import graphics.Message;
 import graphics.Sprite;
 import graphics.SpriteSheet;
 import graphics.WalkingSprite;
@@ -13,6 +17,8 @@ import java.awt.GraphicsConfiguration;
 import java.awt.GraphicsEnvironment;
 import java.awt.Transparency;
 import java.awt.image.BufferedImage;
+import java.util.Iterator;
+import java.util.LinkedList;
 import java.util.Random;
 import java.util.Stack;
 
@@ -31,55 +37,77 @@ import utility.Tile;
  */
 public class ExploreMode extends GameMode
 {
-	private static final byte	PATH			= 0;
-	private static final byte	WALL			= 1;
+	private static final byte		PATH				= 0;
+	private static final byte		WALL				= 1;
 	
-	private static final Color	WALL_COLOR		= Color.DARK_GRAY;
-	private static final Color	PATH_COLOR		= Color.WHITE;
-	private static final Color	PLAYER_COLOR	= Color.BLUE;
-	public static final double	WALK_SPEED		= 1.0;
-	public static final double	RUN_SPEED		= 5.0;
+	private static final Color		WALL_COLOR			= Color.DARK_GRAY;
+	private static final Color		PATH_COLOR			= Color.WHITE;
+	private static final Color		PLAYER_COLOR		= Color.BLUE;
+	private static final String		PLAYER_SPRITE		= WalkingSprite.MALE_WARRIOR;
+	// private static final String PLAYER_SPRITE = WalkingSprite.FEMALE_WARRIOR;
 	
-	private static final int HUD_WIDTH = 64;
-	private static final int MAP_WIDTH = 500;
-	private static final int MAP_HEIGHT = 300;
+	public static final double		UPDATE_RATIO		= 60.0 / Game.FRAME_RATE;
+	public static final double		WALK_SPEED			= 1.0 * UPDATE_RATIO;
+	public static final double		RUN_SPEED			= 3.0 * UPDATE_RATIO;
 	
-	private static final String[] HELP_MENU = {
-		"         h - help menu",
-		"         m - map",
-		"         t - time",
-		"         r - rest",
-		"  enter, x - action, confirm",
-		"    esc, z - cancel, run",
-		"" + Direction.LEFT  + Direction.UP + Direction.DOWN + Direction.RIGHT + ", awsd - navigation",
-		"  ctrl + f - fullscreen",
-		"  ctrl + q - quit game"
-};
+	private static final int		HUD_WIDTH			= 64;
+	private static final int		WIDTH				= 100;
+	private static final int		HEIGHT				= 70;
+	private static final int		CA_ITERATIONS		= 3;
 	
+	public static final float		SOFT_LIGHT_ALPHA	= 0.85f;
+	public static final boolean		DISPLAY_SOFT_LIGHT	= false;
 	
+	public static final String		FONT_NAME			= "Courier";
+	public static final int			FONT_STYLE			= Font.PLAIN;
+	public static final int			FONT_SIZE			= 12;
+	public static final Font		FONT				= new Font(FONT_NAME,
+																FONT_STYLE,
+																FONT_SIZE);
 	
-	public static int			PATH_TILE		= SpriteSheet.CAVE_PATH;
-	public static int			WALL_TILE		= SpriteSheet.CAVE_WALL;
+	private static final String[]	HELP_MENU			= {
+			"         h - help menu",
+			"         m - map",
+			"         t - time",
+			"         r - rest",
+			"         v - vitals",
+			"  enter, x - action, confirm",
+			"    esc, z - cancel, run",
+			"" + Direction.LEFT + Direction.UP + Direction.DOWN
+					+ Direction.RIGHT + ", awsd - navigation",
+			"  ctrl + f - fullscreen", "  ctrl + q - quit game" };
 	
-	Entity						player;
-	PlayerCharacter				hero;
+	public static int				PATH_TILE			= SpriteSheet.CAVE_PATH;
+	public static int				WALL_TILE			= SpriteSheet.CAVE_WALL;
+	public static int				PATH_TILE_2			= SpriteSheet.CAVE_PATH_ALT;
+	public static int				WALL_TILE_2			= SpriteSheet.CAVE_WALL_ALT;
 	
-	int							width;
-	int							height;
-	int							tWidth;
-	int							tHeight;
+	Entity							player;
+	PlayerCharacter					hero;
+	LinkedList<Message>				messages;
 	
-	int							tileSize;
+	int								width;
+	int								height;
+	int								tWidth;
+	int								tHeight;
+	int								tileSize;
 	
-	Tile[][]					tiles;
-	Random						random;
+	Maze							maze;
+	Tile[][]						tiles;
+	Random							random;
 	
-	BufferedImage				bgImage;
-	BufferedImage				fgImage;
+	BufferedImage					bgImage;
+	BufferedImage					fgImage;
+	BufferedImage					hud;
 	
-	BufferedImage				hud;
+	private boolean					displayMap			= true;
+	private boolean					displayHelp			= true;
+	private boolean					displayTimer		= true;
+	private boolean					displayVitals		= true;
+	private boolean					displaySoftLight	= DISPLAY_SOFT_LIGHT;
 	
-	Maze						maze;
+	private BasicBorderedTile		pathRenderer = new BasicBorderedTile(Images.CAVERN_PATH_BORDER, PATH);
+	private BasicBorderedTile		wallRenderer = new BasicBorderedTile(Images.CAVERN_WALL_BORDER, WALL);
 	
 	/**
 	 * Create a new ExploreMode.
@@ -88,19 +116,28 @@ public class ExploreMode extends GameMode
 		super("Explore Mode");
 		tileSize = 16;
 		
-		maze = Maze.generateRandomShapedRoom(MAP_WIDTH, MAP_HEIGHT, 0.70, false);
+		//maze = Maze.generateRandomShapedRoom(WIDTH, HEIGHT, 0.70, false);
 		// maze = Maze.generateRandomWalledMaze(200,200);
 		// maze.setDifficulty(Difficulty.NORMAL);
+		maze = Maze.generateCellularAutomataRoom(WIDTH, HEIGHT);
+		maze.connectDisconnectedComponents();
+		for (int i = 0; i < CA_ITERATIONS; i++) maze.cellularAutomataIteration();
+		maze.connectDisconnectedComponents();
+		
+		
+		System.out.println(maze);
+		
 		width = maze.getWidth();
 		height = maze.getHeight();
 		
 		tWidth = width * tileSize;
 		tHeight = height * tileSize;
 		
+		messages = new LinkedList<Message>();
 		random = new Random();
-		// initializeTiles();
-		initializeTilesForMaze();
+		initializeTilesFromMaze();
 		
+		// get initial player position.
 		int px = 0, py = 0;
 		for (int y = 0; y < height; y++) {
 			for (int x = 0; x < width; x++) {
@@ -112,70 +149,102 @@ public class ExploreMode extends GameMode
 			}
 		}
 		
-		Sprite playerSprite = new WalkingSprite(WalkingSprite.MALE_WARRIOR);
+		// create the sprite the player will use.
+		Sprite playerSprite = new WalkingSprite(PLAYER_SPRITE);
 		int pWidth = 8;
 		int pHeight = 8;
 		int xOffset = (tileSize - pWidth) / 2;
 		int yOffset = (tileSize - pHeight) / 2;
 		int frameRate = 8;
-		player = new Entity(px * tileSize + pWidth, py * tileSize + pHeight, pWidth, pHeight, playerSprite, frameRate,
-				xOffset, yOffset);
-		player.setRunSpeed(6.0);	
+		
+		// create the entity that manages the player movement.
+		player = new Entity(px * tileSize + pWidth, py * tileSize + pHeight,
+				pWidth, pHeight, playerSprite, frameRate, xOffset, yOffset);
+		player.setWalkSpeed(WALK_SPEED);
+		player.setRunSpeed(RUN_SPEED);
+		
+		// create the Hero that contains all game stats for the hero character.
 		hero = new PlayerCharacter("Michael");
 		
+		// initialize game graphics layers
 		GraphicsConfiguration gc = GraphicsEnvironment
 				.getLocalGraphicsEnvironment().getDefaultScreenDevice()
 				.getDefaultConfiguration();
-		
-		// initialize game graphics layers
 		bgImage = gc.createCompatibleImage(tWidth, tHeight,
 				Transparency.TRANSLUCENT);
 		fgImage = gc.createCompatibleImage(tWidth, tHeight,
 				Transparency.TRANSLUCENT);
-				
+		
 		Graphics2D bgGraphics = graphics.getBackgroundGraphics();
 		bgGraphics.setColor(Color.BLACK);
-		drawBackground();
+		createBackgroundImage();
+		createForegroundImage();
 		createHudMap();
 		bgGraphics.drawImage(bgImage, 0, 0, null);
 		// drawForeground();
 	}
 	
-	private void createHudMap(){
-		GraphicsConfiguration gc = GraphicsEnvironment.getLocalGraphicsEnvironment().getDefaultScreenDevice().getDefaultConfiguration();
+	/**
+	 * Create the bitmap for the HUD map.
+	 */
+	private void createHudMap() {
+		GraphicsConfiguration gc = GraphicsEnvironment
+				.getLocalGraphicsEnvironment().getDefaultScreenDevice()
+				.getDefaultConfiguration();
 		double hWidth = HUD_WIDTH;
 		double hHeight = (hWidth * height / (double) width);
-		hud = gc.createCompatibleImage((int)hWidth, (int)hHeight, Transparency.OPAQUE);
-		double xChunk =  width  / hWidth;
-		double yChunk =  height / hHeight;
-		for(int hx = 0; hx < (int)hWidth; hx++){
-			for (int hy = 0; hy < (int)hHeight; hy++){
-				//find the average of reach chunk of the map, and draw result.
+		hud = gc.createCompatibleImage((int) hWidth, (int) hHeight,
+				Transparency.OPAQUE);
+		double xChunk = width / hWidth;
+		double yChunk = height / hHeight;
+		for (int hx = 0; hx < (int) hWidth; hx++) {
+			for (int hy = 0; hy < (int) hHeight; hy++) {
+				// find the average of reach chunk of the map, and draw result.
 				int p = 0, w = 0;
-				for(int x = (int)(hx * xChunk); x < hx * xChunk + xChunk && x < width; x++){
-					for(int y = (int)(hy * yChunk); y < hy * yChunk + yChunk && y < height; y++){
-						//System.out.println(maze.getCell(x,y));
-						if(maze.getCell(x,y) == Maze.PATH) p++;
-						else w ++;
-					}			
+				for (int x = (int) (hx * xChunk); x < hx * xChunk + xChunk
+						&& x < width; x++) {
+					for (int y = (int) (hy * yChunk); y < hy * yChunk + yChunk
+							&& y < height; y++) {
+						if (maze.getCell(x, y) == Maze.PATH) p++;
+						else w++;
+					}
 				}
-				// more paths
-				//if (p > w) hud.setRGB(hWidth - 1 - hx, hHeight - 1 - hy, 0x88ffffff);
-				if (p > 0){
-					//System.out.println("p");
+				double ratio = p / (double)(p + w);
+				System.out.println(255 * ratio);
+				int v = (int)(255 * ratio);
+				Color c = new Color(v,v,v);
+				hud.setRGB(hx, hy, c.getRGB());
+				/*
+				if (ratio > 0.75) {
+					hud.setRGB(hx, hy, new Color()Color.WHITE.getRGB());
+				}
+				else if (ratio > 0.50) {
+					hud.setRGB(hx, hy, Color.LIGHT_GRAY.getRGB());
+				}
+				else if (ratio > 0.25) {
 					hud.setRGB(hx, hy, Color.DARK_GRAY.getRGB());
 				}
-				// more walls
-				//else hud.setRGB(hWidth - 1 - hx, hHeight - 1 - hy, 0x88000000);
-				else{
-					//System.out.println("w");
+				else {
 					hud.setRGB(hx, hy, Color.BLACK.getRGB());
 				}
+				*/
+				
 			}
 		}
+		
+		// Darken HUD
+		
+		Graphics2D g = hud.createGraphics();
+		g.setComposite(AlphaComposite.getInstance(AlphaComposite.SRC_OVER, 0.50f));
+		g.setColor(Color.BLACK);
+		g.fillRect(0, 0, hud.getWidth(), hud.getWidth());
+		
 	}
 	
-	private void initializeTilesForMaze() {
+	/**
+	 * Setup the Tile state from the Maze data.
+	 */
+	private void initializeTilesFromMaze() {
 		tiles = new Tile[width][height];
 		int halfTile = tileSize / 2;
 		// set them all randomly.
@@ -187,65 +256,57 @@ public class ExploreMode extends GameMode
 				tiles[x][y] = new Tile(nextQuad, type);
 			}
 		}
-		/*
-		// set a top corner to be guaranteed paths.
-		for (int x = 0; x < 4; x++) {
-			for (int y = 0; y < 4; y++) {
-				tiles[x][y].type = PATH;
-			}
-		}
-		*/
-	}
-	
-	private void initializeTiles() {
-		tiles = new Tile[width][height];
-		int halfTile = tileSize / 2;
-		// set them all randomly.
-		for (int x = 0; x < width; x++) {
-			for (int y = 0; y < height; y++) {
-				Quad nextQuad = new Quad(x * tileSize + halfTile, y * tileSize
-						+ halfTile, halfTile, halfTile);
-				if (random.nextInt(4) == 0) tiles[x][y] = new Tile(nextQuad,
-						WALL);
-				else tiles[x][y] = new Tile(nextQuad, PATH);
-			}
-		}
-		
-		// set a top corner to be guaranteed paths.
-		for (int x = 0; x < 4; x++) {
-			for (int y = 0; y < 4; y++) {
-				tiles[x][y].type = PATH;
-			}
-		}
 	}
 	
 	/**
-	 * Render the background image.
+	 * Create the background image. Should only be called once.
 	 */
-	public void drawBackground() {
+	public void createBackgroundImage() {
 		Graphics2D bgGraphics = (Graphics2D) bgImage.getGraphics();
 		// Color c;
 		int i;
+
+		//pathRenderer.render(bgGraphics, maze.getCells());
+		//wallRenderer.render(bgGraphics, maze.getCells());
 		
 		// draw the tiles.
 		for (int x = 0; x < width; x++) {
 			for (int y = 0; y < height; y++) {
-				if (tiles[x][y].type == WALL) {
-					// c = WALL_COLOR;
-					i = WALL_TILE;
+				if (tiles[x][y].type == WALL){
+					//SpriteSheet.WORLD.render(bgGraphics, WALL_TILE, x * tileSize, y * tileSize);
+					//wallRenderer.renderTile8x8(bgGraphics, maze.getCells(), x, y, width, height);
+					wallRenderer.renderTile(bgGraphics, maze.getCells(), x, y, width, height);
 				}
-				else {
-					// c = PATH_COLOR;
-					i = PATH_TILE;
+				else{
+					//pathRenderer.renderTile(bgGraphics, maze.getCells(), x, y, width, height);
+					//i = random.nextBoolean() ? PATH_TILE_2 : PATH_TILE;
+					//SpriteSheet.WORLD.render(bgGraphics, i, x * tileSize, y * tileSize);
+					pathRenderer.renderTile(bgGraphics, maze.getCells(), x, y, width, height);
+				}
+				/*
+				//if (tiles[x][y].type == WALL) {
+					// c = WALL_COLOR;
+					//i = random.nextInt(3) == 0 ? WALL_TILE_2 : WALL_TILE;
+					//i = random.nextBoolean() ? WALL_TILE_2 : WALL_TILE;
+					//SpriteSheet.WORLD.render(bgGraphics, i, x * tileSize, y * tileSize);
+				//}
+				//else {
+				if(tiles[x][y].type == PATH){
+					//c = PATH_COLOR;
+					//i = random.nextInt(3) == 0 ? PATH_TILE_2 : PATH_TILE;
+					i = random.nextBoolean() ? PATH_TILE_2 : PATH_TILE;
+					SpriteSheet.WORLD.render(bgGraphics, i, x * tileSize, y * tileSize);
 				}
 				
-				SpriteSheet.WORLD.render(bgGraphics, i, x * tileSize, y
-						* tileSize);
+				
 				// bgGraphics.setColor(c);
 				// bgGraphics.fillRect(x * tileSize, y * tileSize,
-				// tileSize,tileSize);
+				// tileSize,tileSize);				 
+				 */
 			}
 		}
+		
+
 		bgGraphics.dispose();
 		
 	}
@@ -253,30 +314,41 @@ public class ExploreMode extends GameMode
 	/**
 	 * Render the foreground image.
 	 */
-	public void drawForeground() {
-		int gWidth = graphics.getWidth();
-		int gHeight = graphics.getHeight();
-		
-		int[] fgPixels = graphics.getForegroundPixels();
-		
-		int fc = Color.GREEN.getRGB();
-		
-		for (int x = 0; x < gWidth; x++) {
-			for (int y = 0; y < gHeight; y++) {
-				
-				if (random.nextInt(20) == 0) {
-					fgPixels[x + y * gWidth] = fc;
-				}
-				else {
-					fgPixels[x + y * gWidth] = 0;
-				}
-			}
+	public void createForegroundImage() {
+		Graphics2D fgGraphics = (Graphics2D) fgImage.getGraphics();
+		int w = fgImage.getWidth();
+		int h = fgImage.getHeight();
+		int max = 40;
+		int sw = Images.SHADOW_512.getWidth();
+		for (int i = 0; i < max; i++) {
+			fgGraphics.setComposite(AlphaComposite.getInstance(AlphaComposite.SRC_OVER,
+			Math.min(0.15f, random.nextFloat())));
+			int x = random.nextInt(Math.abs(w - sw));
+			int y = random.nextInt(Math.abs(h - sw));
+			fgGraphics.drawImage(Images.SHADOW_512, x, y, null);
 		}
+		sw = Images.SHADOW_288.getWidth();
+		for (int i = 0; i < max; i++) {
+			fgGraphics.setComposite(AlphaComposite.getInstance(AlphaComposite.SRC_OVER,
+			Math.min(0.15f, random.nextFloat())));
+			int x = random.nextInt(Math.abs(w - sw));
+			int y = random.nextInt(Math.abs(h - sw));
+			fgGraphics.drawImage(Images.SHADOW_288, x, y, null);
+		}
+		
+		sw = Images.SHADOW_PLAYER_MASK.getWidth();
+		for (int i = 0; i < max; i++) {
+			fgGraphics.setComposite(AlphaComposite.getInstance(AlphaComposite.SRC_OVER,
+			Math.min(0.15f, random.nextFloat())));
+			int x = random.nextInt(Math.abs(w - sw));
+			int y = random.nextInt(Math.abs(h - sw));
+			fgGraphics.drawImage(Images.SHADOW_PLAYER_MASK, x, y, null);
+		}
+		
 	}
 	
 	@Override
 	public void update() {
-		// updatePlayer();
 		updatePlayerNew();
 		updateGraphics();
 	}
@@ -330,26 +402,36 @@ public class ExploreMode extends GameMode
 		adjustForCollisions(player);
 	}
 	
-	private boolean displayMap = false;
-	private boolean displayHelp = true;
-	
 	/**
 	 * Update the player's position.
 	 */
 	private void updatePlayerNew() {
 		// toggle map display on input
-		if (!Command.MAP.isConsumed()){
+		if (!Command.MAP.isConsumed()) {
 			displayMap = !displayMap;
 			Command.MAP.consume();
 		}
 		
 		// toggle help display on input
-		if (!Command.HELP.isConsumed()){
+		if (!Command.HELP.isConsumed()) {
 			displayHelp = !displayHelp;
 			Command.HELP.consume();
 		}
 		
-		if (Command.moveSelected()) {
+		// toggle display of vitals
+		if (!Command.VITALS.isConsumed()) {
+			displayVitals = !displayVitals;
+			Command.VITALS.consume();
+		}
+		
+		// toggle display of timer
+		if (!Command.TIME.isConsumed()) {
+			displayTimer = !displayTimer;
+			Command.TIME.consume();
+		}
+		
+		boolean moving = Command.moveSelected();
+		if (moving && !Command.REST.isPressed()) {
 			Stack<Direction> directions = new Stack<Direction>();
 			
 			if (Command.CANCEL.isPressed()) player.setRunning(true);
@@ -363,13 +445,19 @@ public class ExploreMode extends GameMode
 			
 			player.setDirectionStack(directions);
 			player.update();
-			hero.tick();
-			//System.out.printf("px: %f py: %f\n", player.x / player.getWidth(), player.y / player.getHeight());
+			// System.out.printf("px: %f py: %f\n", player.x /
+			// player.getWidth(), player.y / player.getHeight());
 		}
 		else {
-			//System.out.println("stop");
+			// System.out.println("stop");
 			player.stop();
 		}
+		
+		// update the player's clock if moving, or if resting.
+		if(moving || Command.REST.isPressed()){
+			hero.tick();
+		}
+		
 		
 		// ****************************
 		// adjust for any collisions.
@@ -377,19 +465,19 @@ public class ExploreMode extends GameMode
 		// keep within bounds of map.
 		if (player.x < player.halfWidth) {
 			player.x = player.halfWidth;
-			//System.out.println("out of bounds - LEFT");
+			// System.out.println("out of bounds - LEFT");
 		}
 		else if (player.x >= tWidth - player.halfWidth) {
 			player.x = tWidth - player.halfWidth;
-			//System.out.println("out of bounds - RIGHT");
+			// System.out.println("out of bounds - RIGHT");
 		}
 		if (player.y < player.halfHeight) {
 			player.y = player.halfHeight;
-			//System.out.println("out of bounds - UP");
+			// System.out.println("out of bounds - UP");
 		}
 		else if (player.y >= tHeight - player.halfHeight) {
 			player.y = tHeight - player.halfHeight;
-			//System.out.println("out of bounds - DOWN");
+			// System.out.println("out of bounds - DOWN");
 		}
 		
 		// collisions!
@@ -548,6 +636,9 @@ public class ExploreMode extends GameMode
 		
 		bgGraphics.drawImage(bgImage, 0, 0, gWidth, gHeight, sx1, sy1, sx2,
 				sy2, null);
+		bgGraphics.setComposite(AlphaComposite.getInstance(
+				AlphaComposite.SRC_OVER, 0.25f));
+		bgGraphics.drawImage(Images.LARGE_SHADOW, 0, 0, null);
 		
 		// ***********************************************************
 		// Sprites
@@ -565,7 +656,7 @@ public class ExploreMode extends GameMode
 				.getInstance(AlphaComposite.SRC_OVER));
 		
 		// draw player
-		sGraphics.setColor(PLAYER_COLOR);
+		// sGraphics.setColor(PLAYER_COLOR);
 		int px = xOffset + (int) player.getLeftX();
 		int py = yOffset + (int) player.getTopY();
 		int pw = (int) (player.halfWidth + player.halfWidth);
@@ -574,101 +665,219 @@ public class ExploreMode extends GameMode
 		// sGraphics.fillRect(px, py,pw, ph);
 		player.render(sGraphics, px, py, px + pw, py + ph);
 		
-		// *******************************************
-		// Draw the HUD map
-		// *******************************************
-		if(displayMap){
-			drawHudMap(sGraphics);
-			/*
-		sGraphics.setComposite(AlphaComposite.getInstance(AlphaComposite.SRC_OVER, 0.75f));
-		int hPad = 4;
-		sGraphics.drawImage(hud, hPad, hPad, null);
-		sGraphics.setColor(Color.YELLOW);
-		int hpx = (int) (player.x / player.getWidth() / width * hud.getWidth());
-		int hpy = (int) (player.y / player.getHeight() / height * hud.getHeight());
-		//int hpx = (int) (width  / (double) (hud.getWidth())  * (player.x / width));
-		//int hpy = (int) (height / (double) (hud.getHeight()) * (player.y / height));
-		//System.out.printf("hpx: %d hpy: %d\n", hpx, hpy);
-		sGraphics.fillRect(hPad + hpx, hPad + hpy, 1,1);
-		*/
+		sGraphics.setComposite(AlphaComposite.getInstance(
+				AlphaComposite.SRC_OVER, 0.75f));
+		Iterator<Message> it = messages.iterator();
+		while (it.hasNext()) {
+			Message m = it.next();
+			m.render(sGraphics, xOffset, yOffset);
+			if (m.finished()) it.remove();
 		}
 		
-		// *******************************************
-		// Draw the Help Menu
-		// *******************************************
-		if (displayHelp){
-			
-			drawHelpMenu(sGraphics);
-			/*
-			sGraphics.setComposite(AlphaComposite.getInstance(AlphaComposite.SRC_OVER, 0.75f));
-			int fontSize = 16;
-			sGraphics.setFont(new Font("Courier", Font.PLAIN, fontSize)); 
-			
-			sGraphics.setColor(Color.BLACK);
-			int windowWidth = 26 * 12;
-			int windowHeight = fontSize * (HELP_MENU.length	 + 2);
-			int windowY = (gHeight - windowHeight) / 2;
-			int windowX = (gWidth - windowWidth) / 2;
-			sGraphics.fillRect(windowX,  windowY, windowWidth, windowHeight);
-		
-			sGraphics.setColor(Color.WHITE);
-			int yStep = 1;
-			int xStep = windowX + 14;
-			windowY += fontSize - 4;
-			
-			// write out all help menu messages.
-			for ( int i = 0; i < HELP_MENU.length; i++){
-				sGraphics.drawString(HELP_MENU[i], xStep, windowY + fontSize * (i + 1));	
-			}
-			*/
-			
-		}
 		sGraphics.dispose();
-				
-		// ***********************************************************
-		// Foreground
-		// ***********************************************************
+		
+		// ******************************************
+		// Draw the foreground.
+		// ******************************************
+		
+		Graphics2D fgGraphics = graphics.getForegroundGraphics();
+		fgGraphics.setComposite(AlphaComposite
+				.getInstance(AlphaComposite.CLEAR));
+		fgGraphics.setColor(Color.BLACK);
+		fgGraphics.fillRect(0, 0, gWidth, gHeight);
+		
+		// draw existing light mask.
+		fgGraphics.setComposite(AlphaComposite
+				.getInstance(AlphaComposite.SRC_OVER));
+		fgGraphics.drawImage(fgImage, 0, 0, gWidth, gHeight, sx1, sy1, sx2,
+				sy2, null);
+		int off;
+		
+		// draw lantern light mask around player.
+		off = Images.SHADOW_PLAYER_MASK.getWidth() / 2;
+		fgGraphics.drawImage(Images.SHADOW_PLAYER_MASK, xOffset + (int) player.x - off,
+				yOffset + (int) player.y - off, null);
+		
+		// darken shadow areas by 75% if displaySoftLight, otherwise darken
+		// completely.
+		if (displaySoftLight) fgGraphics.setComposite(AlphaComposite
+				.getInstance(AlphaComposite.SRC_OUT, SOFT_LIGHT_ALPHA));
+		else fgGraphics.setComposite(AlphaComposite
+				.getInstance(AlphaComposite.SRC_OUT));
+		
+		fgGraphics.fillRect(0, 0, gWidth, gHeight);
+		
+		// *******************************************
+		// Map
+		// *******************************************
+		if (displayMap) {
+			drawHudMap(fgGraphics);
+		}
+		
+		// *******************************************
+		// Timer
+		// *******************************************
+		if (displayTimer || Command.REST.isPressed()) {
+			drawTimer(fgGraphics);
+		}
+		
+		// *******************************************
+		// Vitals
+		// *******************************************
+		if (displayVitals) {
+			drawVitals(fgGraphics);
+		}
+		
+		// *******************************************
+		// Help
+		// *******************************************
+		if (displayHelp) {
+			drawHelpMenu(fgGraphics);
+		}
+		
 	}
 	
 	/**
 	 * Draw a HUD.
+	 * 
 	 * @param g
 	 */
-	public void drawHudMap(Graphics2D g){
-		g.setComposite(AlphaComposite.getInstance(AlphaComposite.SRC_OVER, 0.75f));
-		int hPad = 4;
+	public void drawHudMap(Graphics2D g) {
+		g.setComposite(AlphaComposite.getInstance(AlphaComposite.SRC_OVER,
+				0.50f));
+		int hPad = FONT_SIZE / 2;
 		g.drawImage(hud, hPad, hPad, null);
 		g.setColor(Color.YELLOW);
 		int hpx = (int) (player.x / player.getWidth() / width * hud.getWidth());
-		int hpy = (int) (player.y / player.getHeight() / height * hud.getHeight());
-		g.fillRect(hPad + hpx, hPad + hpy, 1,1);
+		int hpy = (int) (player.y / player.getHeight() / height * hud
+				.getHeight());
+		g.fillRect(hPad + hpx, hPad + hpy, 1, 1);
 	}
 	
 	/**
 	 * Draw a help menu.
+	 * 
 	 * @param g The graphics to draw to.
 	 */
-	public void drawHelpMenu(Graphics2D g){
-		g.setComposite(AlphaComposite.getInstance(AlphaComposite.SRC_OVER, 0.75f));
-		int fontSize = 15;
-		g.setFont(new Font("Courier", Font.PLAIN, fontSize)); 
+	public void drawHelpMenu(Graphics2D g) {
+		g.setComposite(AlphaComposite.getInstance(AlphaComposite.SRC_OVER,
+				0.75f));
+		// int fontSize = 14;
+		g.setFont(FONT);
 		
 		g.setColor(Color.BLACK);
 		int windowWidth = 26 * 12;
-		int windowHeight = fontSize * (HELP_MENU.length	 + 2);
+		int windowHeight = FONT_SIZE * (HELP_MENU.length + 2);
 		int windowY = (graphics.getHeight() - windowHeight) / 2;
 		int windowX = (graphics.getWidth() - windowWidth) / 2;
-		g.fillRect(windowX,  windowY, windowWidth, windowHeight);
-	
+		g.fillRect(windowX, windowY, windowWidth, windowHeight);
+		
 		g.setColor(Color.WHITE);
 		int yStep = 1;
 		int xStep = windowX + 14;
-		windowY += fontSize - 4;
+		windowY += FONT_SIZE - 4;
 		
 		// write out all help menu messages.
-		for ( int i = 0; i < HELP_MENU.length; i++){
-			g.drawString(HELP_MENU[i], xStep, windowY + fontSize * (i + 1));	
+		for (int i = 0; i < HELP_MENU.length; i++) {
+			g.drawString(HELP_MENU[i], xStep, windowY + FONT_SIZE * (i + 1));
 		}
+	}
+	
+	/**
+	 * Draw the vitals.
+	 * 
+	 * @param g
+	 */
+	public void drawVitals(Graphics2D g) {
+		// System.out.println("vitals!");
+		g.setComposite(AlphaComposite.getInstance(AlphaComposite.SRC_OVER,
+				0.50f));
+		// int fontSize = 8;
+		// g.setFont(new Font("Courier", Font.PLAIN, fontSize));
+		g.setFont(FONT);
+		int windowWidth = (int) (FONT_SIZE * 0.8 * 14);
+		int windowHeight = FONT_SIZE * (4 + 1);
+		
+		g.setColor(Color.BLACK);
+		int windowY = FONT_SIZE / 2;
+		int windowX = graphics.getWidth() - windowWidth - FONT_SIZE / 2;
+		g.fillRect(windowX, windowY, windowWidth, windowHeight);
+		
+		g.setColor(Color.WHITE);
+		int yStep = 1;
+		windowX += tileSize / 2;
+		windowY += tileSize / (FONT_SIZE / 2);
+		g.drawString(hero.getDamageVitals(), windowX, windowY + FONT_SIZE
+				* yStep++);
+		g.drawString(hero.getHungerVitals(), windowX, windowY + FONT_SIZE
+				* yStep++);
+		g.drawString(hero.getThirstVitals(), windowX, windowY + FONT_SIZE
+				* yStep++);
+		g.drawString(hero.getStressVitals(), windowX, windowY + FONT_SIZE
+				* yStep++);
+		
+	}
+	
+	/**
+	 * Draw the vitals.
+	 * 
+	 * @param g
+	 */
+	public void drawTimer(Graphics2D g) {
+		// System.out.println("timer!");
+		g.setComposite(AlphaComposite.getInstance(AlphaComposite.SRC_OVER ,0.50f));
+		// int fontSize = 8;
+		g.setFont(FONT);
+		
+		g.setColor(Color.BLACK);
+		int w = (int) (FONT_SIZE * 0.8 * 7);
+		int h = FONT_SIZE + FONT_SIZE / 2;
+		
+		int x = graphics.getWidth() - w - FONT_SIZE / 2;
+		int y = graphics.getHeight() - h - FONT_SIZE / 2;
+		g.fillRect(x, y, w, h);
+		g.setColor(Color.WHITE);
+		
+		x += FONT_SIZE / 2;
+		y += FONT_SIZE;
+		//g.drawString(String.format("Time: %6s", hero.time / Game.FRAME_RATE), x, y);
+		g.drawString(formatIntegerAsTime((int)hero.time), x, y);
+	}
+	
+	// ***********************************************************************
+	// TIME CONSTANTS
+	// ***********************************************************************
+	
+	public static final int SECONDS_PER_MINUTE = 60;
+	public static final int MINUTES_PER_HOUR = 60;
+	public static final int SECONDS_PER_HOUR = 60 * 60;
+	public static final int HOURS_PER_DAY = 24;
+	public static final int NOON = 12;
+
+	/** Start the game at a random time. **/
+	public static final int START_TIME = new Random().nextInt(SECONDS_PER_HOUR * HOURS_PER_DAY);
+	
+	public static final String AM = "am";
+	public static final String PM = "pm";
+	
+	/**
+	 * Take an integer and represent it as seconds, minutes, hrs, etc.
+	 * @param time
+	 * @return
+	 */
+	public static String formatIntegerAsTime(int time){
+		time += START_TIME;
+		//int seconds = time % SECONDS_PER_MINUTE;
+		int minutes = (time / MINUTES_PER_HOUR) % MINUTES_PER_HOUR;
+		int hours = (time / SECONDS_PER_HOUR) % HOURS_PER_DAY;
+		String period = hours >= NOON ? PM : AM;
+		hours %= NOON;
+		if (hours == 0) hours = NOON;
+		
+		//String format = String.format("%2d:%02d:%02d %s", hours, minutes, seconds, period);
+		String format = String.format("%2d:%02d %s", hours, minutes, period);
+		
+		return format;
 	}
 	
 }

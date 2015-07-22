@@ -1,7 +1,10 @@
 package utility;
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.Iterator;
+import java.util.List;
 import java.util.Set;
 import java.util.Stack;
 
@@ -112,11 +115,11 @@ public class Graph<E> {
 	
     /**
      * Get the set of all elements connected to the given root node in the
-     * given graph.
+     * given graph.  (Doesn't include the root).
      * @param graph The graph to search over
      * @param root The element that is the root node for the search
      */
-	public Set<E> depthFirstSearch(Graph<E> graph, E root){
+	public Set<E> depthFirstSearch(E root){
 		///Graph dfs = new Graph();
 		
 		HashSet<E> visited = new HashSet<E>();
@@ -127,13 +130,71 @@ public class Graph<E> {
 			E vertex = stack.pop();
 			if(!visited.contains(vertex)){
 				visited.add(vertex);
-				for(E e : graph.getEdges(vertex)){
+				for(E e : getEdges(vertex)){
 					stack.push(e);
 				}
 			}
 		}
 		return visited;
 		
+	}
+
+	/**
+	 * Get a connected component from the given root element using a depth
+	 * first search. (includes the root element)
+	 * @param root The root element to search from.
+	 * @return The connected component.
+	 */
+	public Set<E> getConnectedComponent(E root){
+		Set<E> result = depthFirstSearch(root);
+		//result.add(root);
+		return result;
+	}
+	
+	/**
+	 * Get the first element returned by the iterator of the set of vertices.
+	 * @return
+	 */
+	public E getNext(Iterator<E> it){
+		if(it.hasNext()) return it.next();
+		else return null;
+	}
+	
+	/**
+	 * Get a list of all the disconnected components in this graph.
+	 * @return
+	 */
+	public List<Set<E>> getDisconnectedComponents(){
+		
+		List<Set<E>> components = new ArrayList<Set<E>>();
+
+		E next;
+		Set<E> vertices = getVertices();
+		Iterator<E> it = vertices.iterator();
+		if(it.hasNext()) next = it.next();
+		else next = null;
+
+		while (next != null){		
+			System.out.printf("Next Cell: %s\n", next);
+			
+			// get all components connected to this position.
+			Set<E> component = getConnectedComponent(next);
+			System.out.printf("Found Component of %d cells\n", component.size());
+			
+			// add to list of components.
+			components.add(component);
+
+			// remove all found elements from the set of vertices.
+			for(E e : component){
+				vertices.remove(e);
+			}
+			
+			// get the next vertex to search from.
+			it = vertices.iterator();
+			if(it.hasNext()) next = it.next();
+			else next = null;
+		}
+		return components;
 	}
 
 	@Override

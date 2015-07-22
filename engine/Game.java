@@ -30,7 +30,7 @@ public class Game implements Runnable, Serializable
 {
 	private static final long	serialVersionUID	= 1L;
 	public static final String	NAME = "JGameEngine";
-	public static final int FRAME_RATE = 120;
+	public static final int FRAME_RATE = 60;
 	
 	private GameFrame			frame;
 	private GameDisplayPanel	displayPanel;
@@ -108,11 +108,8 @@ public class Game implements Runnable, Serializable
 					//frame.setUndecorated(true);
 					frame.addKeyListener(inputHandler);
 					frame.getContentPane().add(displayPanel, BorderLayout.CENTER);
-					frame.pack();
-					//frame.setExtendedState(JFrame.MAXIMIZED_BOTH);
 					frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
-					frame.setLocationRelativeTo(null);
-					frame.setVisible(true);
+					frame.display();
 					}
 			});
 			

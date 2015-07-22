@@ -1,10 +1,10 @@
 package party;
 
 public enum Vitals {
-	DAMAGE ("damage"), 
-	HUNGER ("hunger"), 
-	THIRST ("thirst"), 
-	STRESS ("stress");
+	DAMAGE ("Damage"), 
+	HUNGER ("Hunger"), 
+	THIRST ("Thirst"), 
+	STRESS ("Stress");
 	
 	private String name;
 	

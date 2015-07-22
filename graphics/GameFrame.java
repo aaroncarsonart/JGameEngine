@@ -32,6 +32,7 @@ import engine.Game;
  */
 public class GameFrame extends JFrame
 {
+	public static final boolean BEGIN_FULLSCREEN = true;
 	private static final long	serialVersionUID	= 1L;
 	private Container			contentPane;
 	private JMenuBar			menuBar;
@@ -66,45 +67,71 @@ public class GameFrame extends JFrame
 		// View menu items
 		JMenu viewMenu = new JMenu("View");
 		menuBar.add(viewMenu);		
-		JCheckBoxMenuItem fullscreenItem = new JCheckBoxMenuItem("Full Screen", false);
 		fullscreenItem.setAccelerator(KeyStroke.getKeyStroke(KeyEvent.VK_F, Toolkit.getDefaultToolkit().getMenuShortcutKeyMask()));
 		fullscreenItem.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent e) {
-				if(fullscreenItem.isSelected()){
-					GraphicsDevice gd = GraphicsEnvironment.getLocalGraphicsEnvironment().getDefaultScreenDevice();
-					if (gd.isFullScreenSupported()){
-						GameFrame.this.dispose();
-						//GameFrame.this.setUndecorated(true);
-						gd.setFullScreenWindow(GameFrame.this);
-						GameFrame.this.setVisible(true);
-						
-						// hide cursor
-						// Transparent 16 x 16 pixel cursor image.
-						BufferedImage cursorImg = new BufferedImage(16, 16, BufferedImage.TYPE_INT_ARGB);
-
-						// Create a new blank cursor.
-						Cursor blankCursor = Toolkit.getDefaultToolkit().createCustomCursor(
-						    cursorImg, new Point(0, 0), "blank cursor");
-
-						// Set the blank cursor to the JFrame.
-						GameFrame.this.setCursor(blankCursor);
-					}
-					else{
-						GameFrame.this.setExtendedState(JFrame.MAXIMIZED_BOTH);			
-					}
-				}
-				else{
-					GameFrame.this.dispose();
-					GameFrame.this.setUndecorated(false);
-					pack();
-					setLocationRelativeTo(null);
-					GameFrame.this.setVisible(true);
-					
-				}
+				display();
 			}
 		});
 		viewMenu.add(fullscreenItem);
 	
+	}
+	
+	public JMenuItem fullscreenItem = new JCheckBoxMenuItem("Full Screen", BEGIN_FULLSCREEN);
+	
+	/**
+	 * Toggle the state of Fullscreen.
+	 */
+	public void toggleFullscreen(){
+		fullscreenItem.setSelected(!fullscreenItem.isSelected());
+		display();
+	}
+	
+	public void display(){
+		if(fullscreenItem.isSelected()){
+			setToFullscreen();
+		}
+		else{
+			setToWindowMode();			
+		}
+	}
+	
+	/**
+	 * Activate fullscreen mode.
+	 */
+	public void setToFullscreen(){
+		GraphicsDevice gd = GraphicsEnvironment.getLocalGraphicsEnvironment().getDefaultScreenDevice();
+		if (gd.isFullScreenSupported()){
+			GameFrame.this.dispose();
+			//GameFrame.this.setUndecorated(true);
+			gd.setFullScreenWindow(GameFrame.this);
+			GameFrame.this.setVisible(true);
+			
+			// hide cursor
+			// Transparent 16 x 16 pixel cursor image.
+			BufferedImage cursorImg = new BufferedImage(16, 16, BufferedImage.TYPE_INT_ARGB);
+
+			// Create a new blank cursor.
+			Cursor blankCursor = Toolkit.getDefaultToolkit().createCustomCursor(
+			    cursorImg, new Point(0, 0), "blank cursor");
+
+			// Set the blank cursor to the JFrame.
+			GameFrame.this.setCursor(blankCursor);
+		}
+		else{
+			GameFrame.this.setExtendedState(JFrame.MAXIMIZED_BOTH);			
+		}
+	}
+	
+	/**
+	 * switch to windowed mode.
+	 */
+	public void setToWindowMode(){
+		GameFrame.this.dispose();
+		GameFrame.this.setUndecorated(false);
+		pack();
+		setLocationRelativeTo(null);
+		GameFrame.this.setVisible(true);
 	}
 	
 	public static void tryAppleLookAndFeel() {

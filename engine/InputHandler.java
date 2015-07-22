@@ -114,17 +114,26 @@ public class InputHandler implements KeyListener
 		case KeyEvent.VK_H:
 			Command.HELP.setPressed(pressed);
 			break;
+		
 		// *******************************************
 		// TIME
 		// *******************************************
 		case KeyEvent.VK_T:
 			Command.TIME.setPressed(pressed);
 			break;
+		
 		// *******************************************
 		// REST
 		// *******************************************
 		case KeyEvent.VK_R:
 			Command.REST.setPressed(pressed);
+			break;
+		
+		// *******************************************
+		// REST
+		// *******************************************
+		case KeyEvent.VK_V:
+			Command.VITALS.setPressed(pressed);
 			break;
 		}
 	}

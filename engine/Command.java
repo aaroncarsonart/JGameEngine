@@ -11,7 +11,7 @@ import utility.Direction;
  * @version Jun 17, 2015
  */
 public enum Command {
-	UP, DOWN, LEFT, RIGHT, OK, CANCEL, MAP, HELP, TIME, REST, QUIT;
+	UP, DOWN, LEFT, RIGHT, OK, CANCEL, MAP, HELP, TIME, REST, VITALS, QUIT;
 	
 	private boolean	pressed;
 	private boolean	consumed;

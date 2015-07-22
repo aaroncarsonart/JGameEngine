@@ -2,6 +2,8 @@ package party;
 
 import java.util.Random;
 
+import engine.Game;
+
 /**
  * Represents a hero.
  * @author Aaron Carson
@@ -11,10 +13,10 @@ public class PlayerCharacter
 {	
 	public static int MIN = 5;
 	public static int MAX_RAND = 6;
-	public static int DAMAGE_INT = 20 * 16;
-	public static int HUNGER_INT = 200 * 16;
-	public static int THIRST_INT = 100 * 16;
-	public static int STRESS_INT = 300 * 16;
+	public static int DAMAGE_INT = 30 * Game.FRAME_RATE;
+	public static int HUNGER_INT = 120 * Game.FRAME_RATE;
+	public static int THIRST_INT = 60 * Game.FRAME_RATE;
+	public static int STRESS_INT = 42 * Game.FRAME_RATE;
 	public static int DAMAGE_INC = -1;
 	public static int HUNGER_INC = 1;
 	public static int THIRST_INC = 1;
@@ -61,6 +63,24 @@ public class PlayerCharacter
 		return sb.toString();
 	}
 	
+	private static final String VITAL_FORMAT = "%s: %3d / %-3d\n";
+	
+	public String getDamageVitals(){
+		return String.format(VITAL_FORMAT, Vitals.DAMAGE, current.damage, max.damage);
+	}
+
+	public String getHungerVitals(){
+		return String.format(VITAL_FORMAT, Vitals.HUNGER, current.hunger, max.hunger);
+	}
+
+	public String getThirstVitals(){
+		return String.format(VITAL_FORMAT, Vitals.THIRST, current.thirst, max.thirst);
+	}
+
+	public String getStressVitals(){
+		return String.format(VITAL_FORMAT, Vitals.STRESS, current.stress, max.stress);
+	}
+
 	/**
 	 * Make the Timer wait a number of ticks.
 	 * @param ticks
@@ -77,16 +97,16 @@ public class PlayerCharacter
 	public void tick(){
 		time ++;
 		if (time % interval.damage == 0 && current.damage > 0){
-			current.damage += interval.damage;
+			current.damage += increment.damage;
 		}
 		if (time % interval.hunger == 0 && current.hunger < max.hunger){
-			current.hunger += interval.hunger;
+			current.hunger += increment.hunger;
 		}
 		if (time % interval.thirst == 0 && current.thirst < max.thirst){
-			current.thirst += interval.thirst;
+			current.thirst += increment.thirst;
 		}
 		if (time % interval.stress == 0 && current.stress > 0){
-			current.stress += interval.stress;
+			current.stress += increment.stress;
 		}
 		
 		if(current.damage >= max.damage) death(Vitals.DAMAGE);
