@@ -1,0 +1,68 @@
+# ****************************************************************************
+# Items are defined by a number of values, divided by any number of tabs.
+# Empty lines, or lines starting with '#' are counted as comments and ignored.
+
+# What Needs to be defined?
+# All items have four intrinsic values.
+# 1. name
+# 2. value
+# 3. weight
+# 4. stack
+# Name is a unique identifier.  Value is it's price in currency, expressed as
+# an integer.  Weight is the item's weight, expressed as a floating point.
+# Stack is how many items can fit into one item slot; between 1 and 99.
+#
+# ****************************************************************************
+
+# ****************************************************************************
+# Define Items by specifying their type, Name, Value, and Weight.
+# ****************************************************************************
+
+# 1 = 16 x 16 SpriteSheet
+# 2 =  8 x  8 SpriteSheet
+# 3 =  8 x 16 SpriteSheet
+
+# ITEM
+------
+# NAME				VALUE	WEIGHT		STACK	SPRITE	SHEET
+------------------- ------- ----------- ------- ------- ------
+Blue Potion			100		0.1			5		0		1
+Green Potion		40		0.1			5		0		1
+Red Potion			60		0.1			5		0		1
+Purple Potion		200		0.1			5		0		1
+Bottle				20		1			1		20		1
+Water				5		1.5			1		22		1
+Bread				10		0.5			3		10		1
+Meat				20		1			3		11		1
+
+
+# CURRENCY
+----------
+Copper				1		0.011		99		0		1
+Silver				12		0.013		99		0		1
+Gold				144		0.023		99		0		1
+Platinum			1728	0.026		99		0		1
+
+								
+# WEAPON
+---------
+
+# NAME				VALUE	WEIGHT		STACK	SPRITE	SHEET		ATTACK
+------------------- ------- ----------- ------- ------- ----------- -------	
+Broad Sword			250		4			1		60		3			5
+Scimitar			150		2.75		1		61		3			3
+Long Sword			200		3.0			1		62		3			4
+Short Sword			80		2.5			1		63		3			3
+Dagger				20		1			2		64		3			2
+Knife				10		0.5			5		65		3			1
+
+Battle Axe			300		6			1		66		3			6
+Halberd				450		4.5			1		67		3			4
+Large Axe			200		5			1		68		3			5
+Medium Axe			100		3.5			1		69		3			4
+Hand Axe			80		2.0			1		70		3			3
+Throwing Axe		60		1.3			2		71		3			2	
+
+										
+
+

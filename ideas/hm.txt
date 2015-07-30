@@ -1,0 +1,143 @@
+HarvestMoon-RogueLike
+---------------------
+
+Working title: Bounty of a New Life.
+(Potential, Dream, Unique, Individual, Identity, Procedural, Random.)
+
+Description of Gameplay:
+------------------------
+
+Choose your character's gender and strengths/weaknesses, then get immersed in a
+procedurally generated world.  The player sets out to earn money, find food, 
+and choose what to do with your life.  There will be an open field; will you
+become a farmer?  Make friends with the townsfolk.  As you progress, maybe
+someone will fall in love with you?
+
+The idea is a rogue-like where the player begins as a traveler who shows up on 
+the edge of a new town.  All the player has is some money, a backpack, the 
+clothes on their back, and a tent.
+
+A few key details: The player needs to eat food and get rest every day.  
+Otherwise, they will go hungry or get fatigued.  If they player has too much
+fatigue or is too hungry, you will die and the game is over.  You can sleep
+in your tent (if you can find a clearing), and you can forage for food in 
+the forest.
+
+How do make progress?  Begin by foraging for things in the forest that you 
+can sell, and try to make friends with the townsfolk by giving them gifts.  As
+you learn more about the town, you will discover opportunities to make money
+(work for some lumber-jacks, get a part-time job at a bakery, deliver some mail,
+etc).  As you earn some money, you have some options.
+
+Find a Home
+-----------
+
+1.) You can get an apartment in town.  This requires you to pay rent at the 
+beginning of each month, and requires an extra-deposit when signing up.
+
+2.) You can buy a house in town.  This is a nice option as it is pre-built, and
+all you have to do is buy it (though, it is quite expensive).  It will have a
+small yard, with room for maintaining a small garden and some upgrades.
+
+3.) Start a farm!  This is the most ambitious option.  Outside of the town,
+there will be a large, open field, filled with grass, weeds, rocks, and trees,
+with a small stream flowing through it.  This is the place where you begin
+the game.  This area can be cleared and maintained using some tools you can buy
+in the town (Sickle, Hammer, Axe, Hoe).  After clearing a section, you can buy
+some seeds, plant them, and then water them daily (with a watering can).
+
+You can manage crops here without having any buildings.  When your crops are
+mature, you can pick them and put them in your backpack, then take them into
+town and sell them.  This is a good way to earn a lot more extra income, if 
+you can gather the appropriate tools (costing a good few $$$$ investment to
+begin).
+
+A good investment after some crops is a cart to haul your goods.  You can 
+store more crops in your cart, then take them into town.  This reduces trips as
+the hand cart holds far more goods than your backpack.
+
+You can also build buildings on the farm plot.  Once the proper land is cleared,
+and you have enough money and lumber (or a good friendship with the lumberjacks
+for a discount), you can have them build you a house, a chicken coop, a barn,
+and a storage shed (to store extra items, crops, foraged food, etc).
+
+Sleeping in a house (which comes furnished with a bed) gives you better rest
+than sleeping in your tent (recover more fatigue).  
+
+You can also buy animals and raise them.  You don't need a barn for cows and 
+a horse, and you don't need a chicken coop for chickens, but if your animals
+are left outside in the rain, they have a greater chance of getting sick.  You 
+can use lumber from your wood pile to build a fence, to protect your live stock 
+from wolves.
+
+Buying animals before their shelter buildings is allowed, but it has risks.  
+Rain makes the animals unhappy and can make them sick, while sunshine makes
+them happy and feel better.  They must also be fed, and if you talk to them
+they get happier.
+
+Barns protect cows and horses from getting sick.  Chicken Coops protect your
+chickens in the same way.  Each can hold up to 6 of the animal type it is for.
+You are not limited in how many you can build, except for how much space
+is available to build on.
+
+ Friendships, Dating and Marriage
+ --------------------------------
+ 
+ You can establish friendships with the people in the town.  You do so by
+ talking with them, giving them gifts, and doing things for them. 
+ 
+ For Dating, when you first create your character, you can select your
+ preference to date Boys or Girls, regardless of gender.  This way you can
+ play the game how you wish to play it.  In the town, there will be a set of
+ at least 4 eligible bachelors/bachelorettes who are of each gender and
+ dating preference, so you can find someone who fits you.
+ 
+ The people's personalities, appearances, and roles in the town are randomly
+ generated.  So, each playthough will be different, and different characters
+ will have different names and behave differently (and be found in different
+ areas).  This increases the replay-value.
+ 
+ If you develop a friendship with an eligible dating partner (correct 
+ gender and preference), you can begin dating them by seeing them every day,
+ giving them gifts and experiencing scripted events with them.  Eventually,
+ they may show interest in you, and then when the time comes you can marry them.
+ 
+ (You must have a home to be married.  It can be an apartment, house, or farm).
+ 
+ Game Over
+ ---------
+ 
+ When you die (or decide your playthrough is over), the game will play a nice 
+ recap of your exploits, giving you a slideshow of memories.  Your closest
+ friends (if you have any), will attend your funeral, and say some kind and
+ heartfelt words about your life.  Then, your game will be in an 'end' state,
+ where you cannot go on (because, death is final!  So, be careful not to die
+ until it is time).
+ 
+ Note: you can die of old age if you play through 20 years.
+ 
+ This probably won't be completed, but it is a fun idea anyways.
+
+
+
+
+Class Ideas:
+------------
+
+Enums
+
+Input
+All Player commands.
+
+Direction
+The cardinal directions.
+
+
+interface Scene 
+responds to player input, and renders something to a scene.
+
+
+
+
+
+

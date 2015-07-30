@@ -1,8 +1,8 @@
 package main;
 
-import java.io.Serializable;
+import game.engine.Game;
 
-import engine.Game;
+import java.io.Serializable;
 
 /**
  * Entry point for the application.

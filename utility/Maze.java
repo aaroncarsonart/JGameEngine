@@ -1,5 +1,7 @@
 package utility;
 
+import game.map.Quad;
+
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.Iterator;
@@ -9,7 +11,6 @@ import java.util.PriorityQueue;
 import java.util.Queue;
 import java.util.Random;
 import java.util.Set;
-import java.util.Stack;
 
 /**
  * Encapsulates all data for a Maze entity.
@@ -1432,6 +1433,36 @@ public class Maze
 		}
 		
 		return composite;
+	}
+	
+	/**
+	 * Get a scaled copy of a maze.
+	 * @param original The original maze to scale.
+	 * @param scale The value to scale by, must be greater than zero.
+	 * @return A new maze.
+	 */
+	public static Maze createScaledCopy(Maze original, int scale){
+		// ensure proper arguments
+		if (scale < 1){
+			throw new IllegalArgumentException("Scale must be greater than zero.");
+		}
+	
+		Maze maze = new Maze(original.width * scale, original.height * scale);
+		
+		// loop through original maze
+		for(int x = 0; x < original.width; x++){
+			for(int y = 0; y < original.height; y++){
+				
+				// loop through 0 to scale for x and y, setting new maze values
+				for(int x2 = x * scale; x2 < (x + 1) * scale; x2++){
+					for(int y2 = y * scale; y2 < (y + 1) * scale; y2++){
+						maze.cells[x2][y2] = original.cells[x][y];
+					}					
+				}
+			}			
+		}
+		
+		return maze;
 	}
 	
 	// ************************************************************************

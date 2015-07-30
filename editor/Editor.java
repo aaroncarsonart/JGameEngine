@@ -1,6 +1,6 @@
 package editor;
 
-import graphics.GameFrame;
+import game.graphics.GameFrame;
 
 import java.awt.BorderLayout;
 import java.awt.Color;
