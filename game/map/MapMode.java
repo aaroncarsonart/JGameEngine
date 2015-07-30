@@ -3,6 +3,7 @@ package game.map;
 import game.creature.Character;
 import game.engine.Command;
 import game.engine.mode.GameMode;
+import game.graphics.GameFrame;
 import game.graphics.Images;
 import game.graphics.SpriteSheet;
 import game.graphics.sprite.ItemSprite;
@@ -741,7 +742,7 @@ public class MapMode extends GameMode
 		// primaryMenu = createInventoryDetailsMenu();
 		menus.push(primaryMenu);
 	}
-		
+	
 	/**
 	 * Create a Nested Inventory Menu that displays a list of item functions in
 	 * the outer menu, and a list of items in the inner menu.
@@ -853,11 +854,11 @@ public class MapMode extends GameMode
 	/**
 	 * Display the Settings Menu.
 	 */
-	private void displaySettingsMenu(){
+	private void displaySettingsMenu() {
 		primaryMenu = createNestedSettingsMenu();
 		menus.push(primaryMenu);
 	}
-
+	
 	/**
 	 * Create a Nested Inventory Menu that displays a list of item functions in
 	 * the outer menu, and a list of items in the inner menu.
@@ -867,10 +868,10 @@ public class MapMode extends GameMode
 	private Menu createNestedSettingsMenu() {
 		String title = "Settings";
 		String[] outerItems = SettingsMenuItem.getStringValues();
-		String[] innerItems = {""};
+		String[] innerItems = { "" };
 		byte outerAlign = Menu.VERTICAL;
 		byte innerAlign = Menu.VERTICAL;
-		SettingsMenuResponder outerResponder = new SettingsMenuResponder();
+		SettingsResponder outerResponder = new SettingsResponder();
 		int width = graphics.getWidth();
 		int height = graphics.getHeight();
 		Menu settingsMenu = new NestedMenu(title, outerItems, innerItems,
@@ -885,18 +886,24 @@ public class MapMode extends GameMode
 	 * @author Aaron Carson
 	 * @version Jul 28, 2015
 	 */
-	public class SettingsMenuResponder implements Menu.SelectionResponder
+	public class SettingsResponder implements Menu.SelectionResponder
 	{
 		@Override
 		public void selectMenuItem(int index) {
 			SettingsMenuItem menuItem = SettingsMenuItem.get(index);
 			if (menuItem == null) return;
 			switch (menuItem) {
+			case FULLSCREEN:
+				GameFrame.toggleFullscreen();
+				Command.OK.release();
+				break;
 			default:
+				//clearAllMenus();
+				//showMessage("selected \"" + menuItem.getFormattedName() + "\"", 120);
+				break;
 			}
 			// toPreviousMenu();
-			clearAllMenus();
-			showMessage("selected \"" + menuItem.getFormattedName() + "\"", 120);
+			
 		}
 		
 		@Override

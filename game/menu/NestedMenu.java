@@ -109,4 +109,9 @@ public class NestedMenu extends Menu
 			nestedMenu.render(g, ix, iy, alpha);			
 		}
 	}
+	
+	public void listen(){
+		if (focusedMenu == this) super.listen();
+		else nestedMenu.listen();
+	}
 }

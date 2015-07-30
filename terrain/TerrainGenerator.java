@@ -3,7 +3,7 @@ package terrain;
 import java.awt.Color;
 import java.util.Random;
 
-import main.Main;
+import main.JGameEngine;
 import utility.Graph;
 import utility.Position;
 
@@ -211,7 +211,7 @@ public class TerrainGenerator
 	 * @param args
 	 */
 	public static void main(String[] args){		
-		Main.main(null);
+		JGameEngine.main(null);
 	}
 
 }

@@ -7,6 +7,7 @@ import java.io.BufferedReader;
 import java.io.FileNotFoundException;
 import java.io.FileReader;
 import java.io.IOException;
+import java.io.InputStreamReader;
 import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -142,7 +143,7 @@ public class Item implements Serializable, Comparable<Item>
 				String.format("%d cp", value), weight, stack);
 	}
 	
-	public static final String			ITEMS_FILE		= "res/txt/items.txt";
+	public static final String			ITEMS_FILE		= "/res/txt/items.txt";
 	
 	public static final int				NAME_ID			= 0;
 	public static final int				VALUE_ID		= 1;
@@ -183,7 +184,8 @@ public class Item implements Serializable, Comparable<Item>
 	public static ArrayList<Item> readItemsFromTextFile() {
 		try {
 			// load the file.
-			BufferedReader br = new BufferedReader(new FileReader(ITEMS_FILE));
+			BufferedReader br = new BufferedReader(new InputStreamReader(
+					Item.class.getResourceAsStream(ITEMS_FILE)));
 			ArrayList<Item> items = new ArrayList<Item>();
 			
 			// read each line of the file.
@@ -207,7 +209,8 @@ public class Item implements Serializable, Comparable<Item>
 				double weight = Double.parseDouble(values.get(WEIGHT_ID));
 				int stack = Integer.parseInt(values.get(STACK_ID));
 				int sprite = Integer.parseInt(values.get(SPRITE_ID));
-				int spriteSheetID = Integer.parseInt(values.get(SPRITESHEET_ID));
+				int spriteSheetID = Integer
+						.parseInt(values.get(SPRITESHEET_ID));
 				System.out.printf("spriteSheetID: %d\n", spriteSheetID);
 				SpriteSheet spriteSheet = SpriteSheet.Items.get(spriteSheetID);
 				

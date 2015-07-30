@@ -11,10 +11,10 @@ import utility.Direction;
  * @version Jun 17, 2015
  */
 public enum Command {
-	UP, DOWN, LEFT, RIGHT, OK, CANCEL, MAP, MENU, INVENTORY, HELP, TIME, REST, VITALS, QUIT;
+	UP, DOWN, LEFT, RIGHT, OK, CANCEL, MAP, MENU, INVENTORY, HELP, TIME, REST, VITALS, FULLSCREEN, QUIT;
 	
-	private boolean	pressed = false;
-	private boolean	consumed = true;
+	private boolean	pressed		= false;
+	private boolean	consumed	= true;
 	
 	/**
 	 * Press this command.
@@ -111,10 +111,11 @@ public enum Command {
 	
 	/**
 	 * Get the Direction associated with the given Command.
+	 * 
 	 * @param command The input command.
-	 * @return An associated Direction.  Defaults to down if invalid input.
+	 * @return An associated Direction. Defaults to down if invalid input.
 	 */
-	public static Direction getDirectionFor(Command command){
+	public static Direction getDirectionFor(Command command) {
 		switch (command) {
 		case UP:
 			return Direction.UP;
@@ -128,6 +129,7 @@ public enum Command {
 			return Direction.DOWN;
 		}
 	}
+	
 	/**
 	 * Check if any moves are selected.
 	 * 
@@ -139,9 +141,10 @@ public enum Command {
 	
 	/**
 	 * Get all currently selected move directions by the player.
+	 * 
 	 * @return the moves.
 	 */
-	public static Stack<Command> selectedMoveCommands(){
-		return moves;		
+	public static Stack<Command> selectedMoveCommands() {
+		return moves;
 	}
 }

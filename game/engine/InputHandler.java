@@ -96,13 +96,16 @@ public class InputHandler implements KeyListener
 		// *******************************************
 		case KeyEvent.VK_ENTER:
 			Command.OK.setPressed(pressed);
+			System.out.println("enter " + (pressed ? "pressed" : "released"));
 			break;
 		
 		case KeyEvent.VK_SPACE:
+			System.out.println("space " + (pressed ? "pressed" : "released"));
 			Command.OK.setPressed(pressed);
 			break;
 		
 		case KeyEvent.VK_X:
+			System.out.println("x " + (pressed ? "pressed" : "released"));
 			Command.OK.setPressed(pressed);
 			break;
 		

@@ -9,7 +9,7 @@ import java.io.Serializable;
  * @author Aaron Carson
  * @version Jun 15, 2015
  */
-public class Main implements Serializable
+public class JGameEngine implements Serializable
 {	
 	private static final long serialVersionUID = 1L;
 
