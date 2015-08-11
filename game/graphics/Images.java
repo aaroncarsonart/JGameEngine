@@ -22,6 +22,7 @@ public class Images
 	public static final BufferedImage CAVERN_WALL_BORDER = loadImageFrom("/res/images/cavern_wall_border.png");
 	public static final BufferedImage CAVERN_PATH_BORDER = loadImageFrom("/res/images/cavern_path_border.png");
 	public static final BufferedImage MENU_BORDER = loadImageFrom("/res/images/WindowBorder8x8.png");
+	public static final BufferedImage MENU_BORDER_2 = loadImageFrom("/res/images/border2.png");
 	public static final BufferedImage ANIMATIONS = loadImageFrom("/res/images/animations.png");
 
 	/**

@@ -5,6 +5,8 @@ import game.graphics.sprite.Sprite;
 import java.util.ArrayList;
 import java.util.List;
 
+import utility.Quad;
+
 /**
  * QuadTree for finding and organizing sprites? I guess, we'll see.
  * 

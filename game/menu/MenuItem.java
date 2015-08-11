@@ -1,3 +1,4 @@
+
 package game.menu;
 
 import java.util.EnumSet;
@@ -42,20 +43,20 @@ public interface MenuItem
 		String[] names = new String[set.size()];
 		for (E e : set) {
 			// System.out.println(e);
-			names[i] = getCapitalizedString(e.toString());
+			names[i] = getCapitalizedWord(e.toString());
 			i++;
 		}
 		return names;
 	}
 	
 	/**
-	 * A helper method to get a capitalized String, where the 1st letter is
+	 * A helper method to get a capitalized word, where the 1st letter is
 	 * upper case and the rest are lower case.
 	 * 
 	 * @param s The String to capitalize.
 	 * @return A Capitalized String.
 	 */
-	public static String getCapitalizedString(String s) {
+	public static String getCapitalizedWord(String s) {
 		return s.substring(0, 1).toUpperCase() + s.substring(1).toLowerCase();
 	}
 	
@@ -65,7 +66,7 @@ public interface MenuItem
 	 * @return a capitalized form of this MenuItem's toString() return value.
 	 */
 	default String getFormattedName() {
-		return getCapitalizedString(this.toString());
+		return getCapitalizedWord(this.toString());
 	}
 	
 	/* *

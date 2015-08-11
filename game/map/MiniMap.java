@@ -11,6 +11,8 @@ import java.awt.GraphicsConfiguration;
 import java.awt.Transparency;
 import java.awt.image.BufferedImage;
 
+import utility.Quad;
+
 /**
  * MiniMap is a special map that draws and displays a transparent mini-map
  * on the screen. 

@@ -1,5 +1,7 @@
 package game.map;
 
+import utility.Quad;
+
 /**
  * A tile matches a quad with passability data.
  * @author Aaron Carson

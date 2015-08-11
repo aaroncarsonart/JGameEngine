@@ -28,8 +28,9 @@ import utility.Direction;
  */
 public class Menu implements Message
 {
-	public static final byte	HORIZONTAL	= 1;
-	public static final byte	VERTICAL	= 12;
+	public static final byte	HORIZONTAL		= 1;
+	public static final byte	VERTICAL		= 12;
+	public static final Color	SELECTION_COLOR	= new Color(100, 100, 255, 120);
 	
 	private String[]			menuItems;
 	private SelectionResponder	responder;
@@ -38,6 +39,7 @@ public class Menu implements Message
 	private int[]				menuItemWidths;
 	private String				menuTitle;
 	private int					selection;
+	private int					savedSelection;
 	private byte				alignment;
 	private BufferedImage		backgroundImage;
 	private int					textHeight;
@@ -54,6 +56,18 @@ public class Menu implements Message
 	private boolean				renderTitle;
 	private boolean				renderCursor;
 	
+	/**
+	 * Create a new Menu.
+	 * 
+	 * @param title The title of this menu. If the title is null (or of size
+	 *        zero), then The title is not displayed.
+	 * @param menuItems An array of Strings representing the menu items of this
+	 *        menu.
+	 * @param alignment The alignment of this menu, either Menu.HORIZONTAL or
+	 *        Menu.VERTICAL.
+	 * @param responder The Menu.SelectionResponder object that defines what
+	 *        behavior to take when a menu item is selected.
+	 */
 	public Menu(String title, String[] menuItems, byte alignment,
 			SelectionResponder responder) {
 		this(title, menuItems, alignment, responder, 0, 0);
@@ -130,6 +144,7 @@ public class Menu implements Message
 		this.width = width < 0 ? 0 : width;
 		this.height = height < 0 ? 0 : height;
 		this.selection = 0;
+		this.savedSelection = -1;
 		this.renderCursor = true;
 		
 		// title will only be rendered if the title is not null or empty.
@@ -161,8 +176,8 @@ public class Menu implements Message
 				Transparency.TRANSLUCENT);
 		Graphics2D g = tmp.createGraphics();
 		g.setFont(FONT);
-		g.setRenderingHint(RenderingHints.KEY_ANTIALIASING,
-				RenderingHints.VALUE_ANTIALIAS_ON);
+		// g.setRenderingHint(RenderingHints.KEY_ANTIALIASING,
+		// RenderingHints.VALUE_ANTIALIAS_ON);
 		
 		// calculate height of a single line of text.
 		FontMetrics metrics = g.getFontMetrics();
@@ -177,9 +192,9 @@ public class Menu implements Message
 		else {
 			innerTitleWidth = 0;
 		}
-		int xPadding = 8;
-		int yPadding = 8;
-		this.lineSpacing = xPadding / 2;
+		// int xPadding = 8;
+		// int yPadding = 8;
+		this.lineSpacing = X_PADDING / 2;
 		selectionWidth = Message.getMaximumRenderedWidth(metrics, menuItems);
 		menuItemWidths = new int[menuItems.length];
 		for (int i = 0; i < menuItems.length; i++) {
@@ -200,10 +215,10 @@ public class Menu implements Message
 		// the menu contains a bordered label to the left, and a menu selection
 		// out to the right.
 		if (height == 0) {
-			this.height = textHeight + 2 * (yPadding + tileHeight);
+			this.height = textHeight + 2 * (Y_PADDING + tileHeight) + Y_FIX;
 		}
-		int titleWidth = innerTitleWidth + 2 * (xPadding + tileWidth);
-		int menuWidth = innerMenuWidth + 2 * (xPadding + tileWidth);
+		int titleWidth = innerTitleWidth + 2 * (X_PADDING + tileWidth);
+		int menuWidth = innerMenuWidth + 2 * (X_PADDING + tileWidth);
 		if (width == 0) {
 			if (renderTitle) this.width = titleWidth + menuWidth;
 			else this.width = menuWidth;
@@ -212,16 +227,18 @@ public class Menu implements Message
 		BufferedImage menuImage = gc.createCompatibleImage(width, height,
 				Transparency.TRANSLUCENT);
 		g = menuImage.createGraphics();
-		g.setRenderingHint(RenderingHints.KEY_ANTIALIASING,
-				RenderingHints.VALUE_ANTIALIAS_ON);
+		// g.setRenderingHint(RenderingHints.KEY_ANTIALIASING,
+		// RenderingHints.VALUE_ANTIALIAS_ON);
 		
 		// draw dark backgrounds.
 		g.setColor(Color.BLACK);
 		int rx, ry, rw, rh;
-		rx = tileWidth;
-		ry = tileHeight;
-		rw = width - tileWidth * 2;
-		rh = height - tileHeight * 2;
+		int txOff = tileWidth / 2;
+		int tyOff = tileHeight / 2;
+		rx = txOff;
+		ry = tyOff;
+		rw = width - txOff / 2 * 2;
+		rh = height - tyOff * 2;
 		g.fillRect(rx, ry, rw, rh);
 		
 		// render the menu borders
@@ -235,15 +252,15 @@ public class Menu implements Message
 		
 		// calculate menu title and menu option positioning values.
 		if (renderTitle) {
-			this.xTitleInset = xPadding + tileWidth;
-			this.yTitleInset = yPadding + tileHeight + fontAscent;
+			this.xTitleInset = X_PADDING + tileWidth;
+			this.yTitleInset = Y_PADDING + tileHeight + fontAscent;
 			this.xMenuInset = titleWidth + xTitleInset;
 			this.yMenuInset = yTitleInset;
 			renderTitle(g, 0, 0);
 		}
 		else {
-			this.xMenuInset = xPadding + tileWidth;
-			this.yMenuInset = yPadding + tileHeight + fontAscent;
+			this.xMenuInset = X_PADDING + tileWidth;
+			this.yMenuInset = Y_PADDING + tileHeight + fontAscent;
 		}
 		g.dispose();
 		backgroundImage = menuImage;
@@ -262,8 +279,8 @@ public class Menu implements Message
 				Transparency.TRANSLUCENT);
 		Graphics2D g = tmp.createGraphics();
 		g.setFont(FONT);
-		g.setRenderingHint(RenderingHints.KEY_ANTIALIASING,
-				RenderingHints.VALUE_ANTIALIAS_ON);
+		// g.setRenderingHint(RenderingHints.KEY_ANTIALIASING,
+		// RenderingHints.VALUE_ANTIALIAS_ON);
 		
 		// calculate height of a single line of text.
 		FontMetrics metrics = g.getFontMetrics();
@@ -276,9 +293,9 @@ public class Menu implements Message
 				renderTitle ? Message.getRenderedWidth(metrics, menuTitle) : 0,
 				Message.getMaximumRenderedWidth(metrics, menuItems));
 		
-		int xPadding = 8;
-		int yPadding = 8;
-		this.lineSpacing = yPadding / 2;
+		// int xPadding = 8;
+		// int yPadding = 8;
+		this.lineSpacing = Y_PADDING / 2;
 		int innerHeight = (textHeight + lineSpacing) * menuItems.length
 				- lineSpacing;
 		
@@ -294,28 +311,30 @@ public class Menu implements Message
 		// the menu contains a bordered label on top, and a menu selection
 		// below.
 		int topHeight;
-		if (renderTitle) topHeight = textHeight + 2 * (yPadding + tileHeight);
+		if (renderTitle) topHeight = textHeight + 2 * (Y_PADDING + tileHeight);
 		else topHeight = 0;
-		int bottomHeight = innerHeight + 2 * (yPadding + tileWidth);
+		int bottomHeight = innerHeight + 2 * (Y_PADDING + tileWidth);
 		if (height == 0) {
 			this.height = topHeight + bottomHeight;
 		}
 		if (width == 0) {
-			this.width = innerWidth + 2 * tileWidth + 2 * xPadding;
+			this.width = innerWidth + 2 * tileWidth + 2 * X_PADDING;
 		}
 		BufferedImage menuImage = gc.createCompatibleImage(width, height,
 				Transparency.TRANSLUCENT);
 		g = menuImage.createGraphics();
-		g.setRenderingHint(RenderingHints.KEY_ANTIALIASING,
-				RenderingHints.VALUE_ANTIALIAS_ON);
+		// g.setRenderingHint(RenderingHints.KEY_ANTIALIASING,
+		// RenderingHints.VALUE_ANTIALIAS_ON);
 		
 		// draw dark backgrounds.
 		g.setColor(Color.BLACK);
 		int rx, ry, rw, rh;
-		rx = tileWidth;
-		ry = tileHeight;
-		rw = width - tileWidth * 2;
-		rh = height - tileHeight * 2;
+		int txOff = tileWidth / 2;
+		int tyOff = tileHeight / 2;
+		rx = txOff;
+		ry = tyOff;
+		rw = width - txOff * 2;
+		rh = height - tyOff * 2;
 		g.fillRect(rx, ry, rw, rh);
 		
 		// render the menu borders
@@ -324,21 +343,21 @@ public class Menu implements Message
 			borderRenderer.render(g, 0, topHeight, width, height - topHeight);
 		}
 		else {
-			borderRenderer.render(g, 0, 0, width, height);			
+			borderRenderer.render(g, 0, 0, width, height);
 		}
 		
 		// calculate menu title and menu option positioning values.
 		if (renderTitle) {
-			this.xTitleInset = xPadding + tileWidth;
-			this.yTitleInset = yPadding + tileHeight + fontAscent;
+			this.xTitleInset = X_PADDING + tileWidth;
+			this.yTitleInset = Y_PADDING + tileHeight + fontAscent;
 			this.xMenuInset = xTitleInset;
 			this.yMenuInset = yTitleInset + topHeight;
 			// draw the title.
 			renderTitle(g, 0, 0);
 		}
 		else {
-			this.xMenuInset = xPadding + tileWidth;
-			this.yMenuInset = yPadding + tileHeight + fontAscent;
+			this.xMenuInset = X_PADDING + tileWidth;
+			this.yMenuInset = Y_PADDING + tileHeight + fontAscent;
 			
 		}
 		
@@ -428,6 +447,17 @@ public class Menu implements Message
 	}
 	
 	/**
+	 * Manually set the selection cursor position.
+	 * 
+	 * @param position The new position.
+	 */
+	public void setSelectionCursor(int position) {
+		if (position < 0) selection = 0;
+		else if (position >= menuItems.length) selection = menuItems.length - 1;
+		else selection = position;
+	}
+	
+	/**
 	 * Listen to the given Command from user input, and move in the related
 	 * direction if the Command is ready to be consumed.
 	 * 
@@ -460,9 +490,23 @@ public class Menu implements Message
 		}
 	}
 	
+	/**
+	 * Cancels the menu selection if CANCEL is pressed.
+	 */
+	public void listenToCancelSelection() {
+		if (!Command.CANCEL.isConsumed()) {
+			Command.CANCEL.consume();
+			cancel();
+		}
+	}
+	
+	/**
+	 * Listen to user input for the menu.
+	 */
 	public void listen() {
 		listenToMoveSelectionCursor();
 		listenToConfirmSelection();
+		listenToCancelSelection();
 	}
 	
 	/**
@@ -472,6 +516,15 @@ public class Menu implements Message
 	 */
 	public int getCapacity() {
 		return menuItems.length;
+	}
+	
+	/**
+	 * Get the current selection of this Menu.,
+	 * 
+	 * @return The index of the current selection.
+	 */
+	public int getSelection() {
+		return selection;
 	}
 	
 	/**
@@ -498,6 +551,39 @@ public class Menu implements Message
 	}
 	
 	/**
+	 * Save the current selection.
+	 */
+	public void saveSelection() {
+		savedSelection = selection;
+	}
+	
+	/**
+	 * Clear the savedSelection.
+	 */
+	public void clearSavedSelection() {
+		savedSelection = -1;
+	}
+	
+	/**
+	 * Get the current saved selection, which may be different from the current
+	 * selection. This is -1 if a selection is not saved.
+	 * 
+	 * @return The savedSelection, or -1.
+	 */
+	public int getSavedSelection() {
+		return savedSelection;
+	}
+	
+	/**
+	 * Check if this menu has a saved selection.
+	 * 
+	 * @return
+	 */
+	public boolean hasSavedSelection() {
+		return savedSelection != -1;
+	}
+	
+	/**
 	 * Render the Menu.
 	 * 
 	 * @param g The Graphics context.
@@ -507,18 +593,18 @@ public class Menu implements Message
 	 * @param cursor if true render the cursor position.
 	 */
 	public void render(Graphics2D g, int x, int y, float alpha, boolean cursor) {
-		int ix = x - width / 2;
-		int iy = y - height / 2;
+		// int ix = x - width / 2;
+		// int iy = y - height / 2;
 		g.setComposite(AlphaComposite.getInstance(AlphaComposite.SRC_OVER,
 				alpha));
-		g.drawImage(backgroundImage, ix, iy, null);
+		g.drawImage(backgroundImage, x, y, null);
 		
 		g.setFont(FONT);
 		g.setColor(Color.WHITE);
 		
 		// renderTitle(g, ix, iy);
-		if (alignment == VERTICAL) renderMenuVertical(g, ix, iy, cursor);
-		else renderMenuHorizontal(g, ix, iy, cursor);
+		if (alignment == VERTICAL) renderMenuVertical(g, x, y, cursor);
+		else renderMenuHorizontal(g, x, y, cursor);
 		
 	}
 	
@@ -552,17 +638,17 @@ public class Menu implements Message
 			int y = yMenuInset + (textHeight + lineSpacing) * i + yOff;
 			
 			// draw the selection rectangle.
-			if (i == selection && cursor) {
+			if ((i == selection || i == savedSelection) && cursor) {
 				Color prevColor = g.getColor();
-				Composite prevComposite = g.getComposite();
-				g.setColor(Color.BLUE);
-				g.setComposite(AlphaComposite.getInstance(
-						AlphaComposite.SRC_OVER, 0.15f));
+				// Composite prevComposite = g.getComposite();
+				g.setColor(SELECTION_COLOR);
+				// g.setComposite(AlphaComposite.getInstance(AlphaComposite.SRC_OVER,
+				// 0.15f));
 				int w = width - xMenuInset * 2;
 				int h = textHeight;
 				g.fillRect(x, y - fontAscent, w, h);
 				g.setColor(prevColor);
-				g.setComposite(prevComposite);
+				// g.setComposite(prevComposite);
 			}
 			
 			// draw the menu item.
@@ -594,20 +680,27 @@ public class Menu implements Message
 			// draw the selection rectangle.
 			if (i == selection && cursor) {
 				Color prevColor = g.getColor();
-				Composite prevComposite = g.getComposite();
-				g.setColor(Color.BLUE);
-				g.setComposite(AlphaComposite.getInstance(
-						AlphaComposite.SRC_OVER, 0.15f));
+				// Composite prevComposite = g.getComposite();
+				g.setColor(SELECTION_COLOR);
+				// g.setComposite(AlphaComposite.getInstance(AlphaComposite.SRC_OVER,
+				// 0.15f));
 				int w = selectSpan;
 				int h = textHeight;
 				g.fillRect(x - lineSpacing, y - fontAscent, w, h);
 				g.setColor(prevColor);
-				g.setComposite(prevComposite);
+				// g.setComposite(prevComposite);
 			}
 			
 			// draw the menu item.
 			g.drawString(menuItems[i], x + xCenter, y);
 		}
+	}
+	
+	/**
+	 * Handle a cancel or back command for this menu.
+	 */
+	public void cancel() {
+		responder.cancel();
 	}
 	
 	/**

@@ -6,6 +6,7 @@ import java.awt.Dimension;
 import java.awt.Graphics;
 import java.awt.Graphics2D;
 import java.awt.Point;
+import java.awt.RenderingHints;
 import java.awt.Toolkit;
 import java.awt.image.BufferedImage;
 import java.awt.image.VolatileImage;
@@ -96,8 +97,12 @@ public class GameDisplayPanel extends JPanel
 	 * border at a maximum scale while preserving the aspect ratio.
 	 */
 	@Override
-	public void paintComponent(Graphics g) {
-		super.paintComponent(g);
+	public void paintComponent(Graphics graphics) {
+		super.paintComponent(graphics);
+		Graphics2D g = (Graphics2D) graphics;
+		//g.setRenderingHint(RenderingHints.KEY_ANTIALIASING,RenderingHints.VALUE_ANTIALIAS_ON);
+		//g.setRenderingHint(RenderingHints.KEY_RENDERING,RenderingHints.VALUE_RENDER_QUALITY);
+
 		
 		// the current width and height of the window.
 		int pw = getWidth();
@@ -140,7 +145,7 @@ public class GameDisplayPanel extends JPanel
 		// draw the Composite, synchronized.
 		// *********************************
 		synchronized (currentGraphics.getImageLock()) {
-			((Graphics2D) g).drawImage(compositeImage, dLeft, dTop, dRight,
+			g.drawImage(compositeImage, dLeft, dTop, dRight,
 					dBottom, 0, 0, width, height, null);
 		}
 		// force update of the GameDisplay.

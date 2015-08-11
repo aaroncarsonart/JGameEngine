@@ -24,17 +24,24 @@ public class GameGraphics implements Serializable
 	// ********************************************************************
 	// Static fields
 	// ********************************************************************
-	
+
+	public static final int FULLSCREEN_WIDTH = 1280;
+	public static final int FULLSCREEN_HEIGHT = 720;
+
 	private static final long	serialVersionUID	= 1L;
-	public static final int		WIDTH				= 512;	// 256;//384;
+	
+	// preferred dimensions: 512 * 288, 426 * 240
+	
+	public static final int		WIDTH				= 426;//FULLSCREEN_WIDTH / 3; //512; // 256;//384;
 															// //(int)(16 * 16 *
 															// 2); //24 * 16 ;
 															// // 512 px
-	public static final int		HEIGHT				= 288;	// 144;//221;
+	public static final int		HEIGHT				=240;// FULLSCREEN_HEIGHT / 3; //288; // 144;//221;
 															// //(int)(16 * 9 *
 															// 2); //24 * 9 ; //
 															// 288 px
 	public static final int		SCALE				= 2;
+	
 	
 	// ********************************************************************
 	// instance fields
@@ -211,10 +218,8 @@ public class GameGraphics implements Serializable
 	public void updateComposite() {
 		// draw buffered images directly to volatile image
 		compositeGraphics = compositeImage.createGraphics();
-				compositeGraphics.setRenderingHint(RenderingHints.KEY_ANTIALIASING,
-						RenderingHints.VALUE_ANTIALIAS_ON);
-				compositeGraphics.setRenderingHint(RenderingHints.KEY_RENDERING,
-						RenderingHints.VALUE_RENDER_QUALITY);
+				//compositeGraphics.setRenderingHint(RenderingHints.KEY_ANTIALIASING,RenderingHints.VALUE_ANTIALIAS_ON);
+				compositeGraphics.setRenderingHint(RenderingHints.KEY_RENDERING,RenderingHints.VALUE_RENDER_QUALITY);
 		
 		int len = imageLayers.length;
 		for (int i = 0; i < len; i++) {

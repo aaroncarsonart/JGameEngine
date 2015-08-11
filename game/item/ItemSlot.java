@@ -171,7 +171,8 @@ public class ItemSlot
 	}
 
 	/**
-	 * Remove one item to the stack.
+	 * Remove the given quantity of items from the stack.
+	 * @param amount The amount to remove.
 	 * @return True, if the item could be removed.
 	 */
 	public boolean remove(int amount){
@@ -183,5 +184,4 @@ public class ItemSlot
 			return true;
 		}
 	}
-
 }

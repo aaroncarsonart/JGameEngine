@@ -7,6 +7,7 @@ import game.engine.Game;
 import game.item.Inventory;
 import game.item.Item;
 import game.item.ListInventory;
+import game.item.SlotInventory;
 
 /**
  * Creatures are the base class for anything that moves and can be encountered
@@ -17,54 +18,56 @@ import game.item.ListInventory;
  */
 public class Creature
 {
+	public static int		STAT_SCALE			= Game.FRAME_RATE;	// Game.FRAME_RATE;
 	// ***********************************************************************
 	// DEFAULTS
 	// ***********************************************************************
-	public static int		DAMAGE_INT	= 30 * Game.FRAME_RATE;
-	public static int		HUNGER_INT	= 120 * Game.FRAME_RATE;
-	public static int		THIRST_INT	= 60 * Game.FRAME_RATE;
-	public static int		STRESS_INT	= 42 * Game.FRAME_RATE;
-	public static int		DAMAGE_INC	= -1;
-	public static int		HUNGER_INC	= 1;
-	public static int		THIRST_INC	= 1;
-	public static int		STRESS_INC	= -1;
-	public static int		INVENTORY_CAPACITY = 10;
+	public static int		DAMAGE_INT			= 30 * STAT_SCALE;
+	public static int		HUNGER_INT			= 120 * STAT_SCALE;
+	public static int		THIRST_INT			= 60 * STAT_SCALE;
+	public static int		STRESS_INT			= 42 * STAT_SCALE;
+	public static int		DAMAGE_INC			= -1;
+	public static int		HUNGER_INC			= 1;
+	public static int		THIRST_INC			= 1;
+	public static int		STRESS_INC			= -1;
+	public static int		INVENTORY_CAPACITY	= 10;
 	
 	// ***********************************************************************
 	// FIELDS
 	// ***********************************************************************
 	/**
-	 * Contains the time intervals to update each VitalStat.  When the
-	 * Creature's time stat reaches a multiple of the interval for a given
-	 * VitalStat, that stat is updated according to its corresponding increment.
+	 * Contains the time intervals to update each VitalStat. When the Creature's
+	 * time stat reaches a multiple of the interval for a given VitalStat, that
+	 * stat is updated according to its corresponding increment.
 	 */
 	public VitalStat		interval;
 	/**
-	 * Contains the increment values for each VitalStat.  These are added when
-	 * the interval for that stat is reached.  If the increment is positive, it
+	 * Contains the increment values for each VitalStat. These are added when
+	 * the interval for that stat is reached. If the increment is positive, it
 	 * increases that VitalStat; if it is negative, it decreases it.
 	 */
 	public VitalStat		increment;
-
-	/**The name of this Creature.**/
+	
+	/** The name of this Creature. **/
 	public String			name;
 	
-	/**Contains the current values for this creature's VitalStats.**/
+	/** Contains the current values for this creature's VitalStats. **/
 	public VitalStat		current;
-	/**Contains the maximum values for this creature's VitalStats.**/
+	/** Contains the maximum values for this creature's VitalStats. **/
 	public VitalStat		max;
 	
-	/**The six primary, base stats for this Creature.**/
+	/** The six primary, base stats for this Creature. **/
 	public BaseStat			base;
 	
-	
 	/**
-	 * The current time step for the Creature.  This effects the Creature's
+	 * The current time step for the Creature. This effects the Creature's
 	 * updates and cool-down times.
 	 */
 	public long				time;
+	public boolean			isDead;
+	public Stat				causeOfDeath;
 	
-	/** 
+	/**
 	 * Contains any items that this Creature has.
 	 */
 	public Inventory<Item>	inventory;
@@ -80,11 +83,11 @@ public class Creature
 		max = vitalStats;
 		current = new VitalStat();
 		base = baseStats;
-		inventory = new ListInventory(INVENTORY_CAPACITY);
+		// inventory = new ListInventory(INVENTORY_CAPACITY);
+		inventory = new SlotInventory(INVENTORY_CAPACITY);
 		
 		// set VitalStat time intervals and increments.
-		interval = new VitalStat(DAMAGE_INT, HUNGER_INT, THIRST_INT,
-				STRESS_INT);
+		interval = new VitalStat(DAMAGE_INT, HUNGER_INT, THIRST_INT, STRESS_INT);
 		increment = new VitalStat(DAMAGE_INC, HUNGER_INC, THIRST_INC,
 				STRESS_INC);
 	}
@@ -224,8 +227,38 @@ public class Creature
 	 * Handle the death of the character.
 	 */
 	public void death(Stat cause) {
-		String s = String.format("%s died due to severe %s.", name, cause);
-		System.out.println(s);
+		this.causeOfDeath = cause;
+		this.isDead = true;
+	}
+	
+	/**
+	 * Get the death message of this creature.
+	 * 
+	 * @return
+	 */
+	public String getDeathMessage() {
+		if (causeOfDeath == null)
+			return String.format("%s is not dead.", name);
+		return String.format("%s has died due to severe %s.", name,
+				causeOfDeath);
+	}
+	
+	/**
+	 * Get the cause of death.
+	 * 
+	 * @return
+	 */
+	public String getCauseOfDeath() {
+		return "severe " + causeOfDeath == null ? "" : causeOfDeath.toString();
+	}
+	
+	/**
+	 * Check if the creature is dead.
+	 * 
+	 * @return
+	 */
+	public boolean isDead() {
+		return isDead;
 	}
 	
 }

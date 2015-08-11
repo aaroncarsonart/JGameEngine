@@ -173,40 +173,7 @@ public class ListInventory implements Inventory<Item>
 	}
 	
 	@Override
-	public String getContents() {
-		StringBuilder sb = new StringBuilder();
-		sb.append("--------------------------\n");
-		sb.append("    Inventory\n");
-		sb.append("--------------------------\n");
-		for (int i = 0; i < capacity; i++) {
-			sb.append(String.format("%2d: ", i));
-			if (i < items.size()) {
-				sb.append(String.format("%-8s x%-2d", items.get(i).name,
-						getQuantity(i)));
-			}
-			else {
-				sb.append('-');
-			}
-			sb.append('\n');
-		}
-		return sb.toString();
-	}
-	
-	@Override
 	public String toString() {
 		return getContents();
-	}
-	
-	@Override
-	public String[] getSlotDescriptions() {
-		String[] descriptions = new String[capacity];
-		String empty = "-         ";
-		for (int i = 0; i < capacity; i++) {
-			Item item = i < items.size() ? items.get(i) : null;
-			if (item == null) descriptions[i] = empty;
-			else descriptions[i] = item.name
-					+ (getQuantity(i) == 1 ? "" : getQuantity(i));
-		}
-		return descriptions;
 	}
 }

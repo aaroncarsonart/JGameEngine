@@ -60,7 +60,7 @@ public class CavernMap extends Map
 	public void addItems(){
 		List<Item> items = Item.readItemsFromTextFile();
 		for(Item item : items){
-			int amount = random.nextInt(3);
+			int amount = random.nextInt(10);
 			for(int i = 0; i < amount; i++){
 				addItem(item, true);
 			}

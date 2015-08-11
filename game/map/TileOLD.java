@@ -1,5 +1,7 @@
 package game.map;
 
+import utility.Quad;
+
 
 /**
  * A tile is an object that represents collision info and rendering data for

@@ -3,29 +3,35 @@ package game.map;
 import game.creature.Character;
 import game.engine.Command;
 import game.engine.mode.GameMode;
+import game.graphics.Colors;
 import game.graphics.GameFrame;
 import game.graphics.Images;
 import game.graphics.SpriteSheet;
 import game.graphics.sprite.ItemSprite;
 import game.graphics.sprite.Sprite;
 import game.graphics.sprite.WalkingSprite;
+import game.item.Inventory;
+import game.item.Item;
+import game.menu.AttributeMessage;
 import game.menu.Menu;
 import game.menu.MenuItem;
 import game.menu.Message;
 import game.menu.MultiLineMessage;
 import game.menu.NestedMenu;
-import game.menu.SingleLineMessage;
 
 import java.awt.AlphaComposite;
 import java.awt.Color;
 import java.awt.Graphics2D;
 import java.awt.RenderingHints;
+import java.awt.font.TextAttribute;
 import java.awt.image.BufferedImage;
+import java.text.AttributedString;
 import java.util.List;
 import java.util.Random;
 import java.util.Stack;
 
 import utility.Position;
+import utility.Quad;
 
 /**
  * MapMode is a general-purpose ExploreMode that uses a Map as a backer to
@@ -36,15 +42,15 @@ import utility.Position;
  */
 public class MapMode extends GameMode
 {
-	Message						testMessage				= new MultiLineMessage(
-																"Hello, world\n test\nFour\nha ha!!!");
+	Message						testMessage			= new MultiLineMessage(
+															"Hello, world\n test\nFour\nha ha!!!");
 	
-	public static final float	SOFT_LIGHT_ALPHA		= 0.85f;
-	public static final boolean	DISPLAY_SOFT_LIGHT		= false;
+	public static final float	SOFT_LIGHT_ALPHA	= 0.85f;
+	public static final boolean	DISPLAY_SOFT_LIGHT	= false;
 	
-	private static final String	NAME					= "Map Mode";
-	private static final int	WIDTH					= 100;
-	private static final int	HEIGHT					= 70;
+	private static final String	NAME				= "Map Mode";
+	private static final int	WIDTH				= 100;
+	private static final int	HEIGHT				= 70;
 	
 	private Map					map;
 	private MiniMap				miniMap;
@@ -64,19 +70,20 @@ public class MapMode extends GameMode
 	private WalkingSprite		player;
 	private Character			hero;
 	
-	private boolean				displayMap				= false;
-	private boolean				displayHelp				= false;
-	private boolean				displayTimer			= false;
-	private boolean				displayVitals			= false;
+	private boolean				displayMap			= false;
+	private boolean				displayHelp			= false;
+	private boolean				displayTimer		= false;
+	private boolean				displayVitals		= false;
 	// private boolean hideDisplays = false;
-	private boolean				displaySoftLight		= DISPLAY_SOFT_LIGHT;
+	private boolean				displaySoftLight	= DISPLAY_SOFT_LIGHT;
 	
-	private Message				notificationMessage;
-	private int					notificationMessageTime	= -1;
+	private AttributeMessage	notificationMessage;
+	private int					notificationTime	= -1;
 	private Stack<Menu>			menus;
 	private Menu				primaryMenu;
 	private Menu				secondaryMenu;
-	private boolean				displayMenu				= false;
+	private boolean				displayMenu			= false;
+	private boolean				gameOver			= false;
 	
 	/**
 	 * Create a new MapMode with default settings.
@@ -180,11 +187,63 @@ public class MapMode extends GameMode
 	}
 	
 	/**
+	 * Process a GameOver.
+	 */
+	private void gameOver() {
+		String name = hero.name;
+		String died = "died";
+		String cause = hero.getCauseOfDeath();
+		String format = "%s has %s from extreme %s.";
+		String message = String.format(format, name, died, cause);
+		AttributedString as = new AttributedString(message);
+		as.addAttribute(TextAttribute.FONT, Message.FONT);
+		
+		int start, end;
+		Color color;
+		
+		// change hero name color.
+		start = 0;
+		end = name.length();
+		color = Colors.LIGHT_BLUE;
+		as.addAttribute(TextAttribute.FOREGROUND, color, start, end);
+		
+		// make message partially red.
+		start = message.indexOf(died);
+		end = start + died.length();
+		color = Color.RED;
+		as.addAttribute(TextAttribute.FOREGROUND, color, start, end);
+		
+		// show the message
+		showMessage(as, -1, true);
+		Command.OK.release();
+		Command.CANCEL.release();
+		Command.MENU.release();
+		gameOver = true;
+	}
+	
+	/**
+	 * Quit the game.
+	 */
+	private void quit() {
+		System.exit(0);
+	}
+	
+	/**
 	 * Update the player's position.
 	 */
 	private void updatePlayer() {
 		
-		// TODO: add INVENTORY shortcut logic
+		// check for GameOver!!!
+		if (hero.isDead()) {
+			if (!gameOver) {
+				gameOver();
+			}
+			else if (!Command.OK.isConsumed() || !Command.CANCEL.isConsumed()
+					|| !Command.MENU.isConsumed()) {
+				quit();
+			}
+			return;
+		}
 		
 		if (!Command.INVENTORY.isConsumed()) {
 			Command.INVENTORY.consume();
@@ -297,7 +356,7 @@ public class MapMode extends GameMode
 			displayMainMenu();
 		}
 		else {
-			toPreviousMenu();
+			primaryMenu.cancel();
 		}
 	}
 	
@@ -316,7 +375,7 @@ public class MapMode extends GameMode
 				
 				// if in inventory menu
 				if (primaryMenu.getName().equals("Inventory")) {
-					toPreviousMenu();
+					primaryMenu.cancel();
 				}
 				
 				// else, show inventory menu
@@ -367,26 +426,71 @@ public class MapMode extends GameMode
 					ItemSprite is = (ItemSprite) s;
 					
 					// player gains the item.
-					
-					if (hero.inventory.isFull()) {
-						// itemMessage = new Message("Inventory is full",
-						// false);
-						setNotificationMessage("Inventory is full");
-					}
-					else {
-						hero.inventory.add(is.item);
-						// itemMessage = new Message("found \"" + is.item.name+
-						// "\"", false);
-						showMessage("found \"" + is.item.name + "\"", 120);
-						
+					boolean addedItem = hero.inventory.add(is.item);
+					if (addedItem) {
+						showMessage(getAttributedStringFor(is.item), 120, true);
 						// remove from sprite list.
 						sprites.remove(i);
 						i--;
 					}
-					// itemMessageTime = 120;
+					else {
+						AttributedString[] as;
+						as = getNoRoomAttributedStrings(is.item);
+						showMessage(as, 120, true);
+					}
 				}
 			}
 		}
+	}
+	
+	/**
+	 * Generate an AttributedString for finding the given Item.
+	 * 
+	 * @param item The item to use.
+	 * @return
+	 */
+	public AttributedString getAttributedStringFor(Item item) {
+		String prefix = "You found a ";
+		String s = prefix + item.getName() + ".";
+		AttributedString as = new AttributedString(s);
+		Color color = Colors.NEW_ITEM;
+		int start = prefix.length();
+		int end = start + item.getName().length();
+		as.addAttribute(TextAttribute.FONT, Message.FONT);
+		as.addAttribute(TextAttribute.FOREGROUND, color, start, end);
+		return as;
+	}
+	
+	/**
+	 * Generate an AttributedString for finding the given Item.
+	 * 
+	 * @param item The item to use.
+	 * @return
+	 */
+	public AttributedString[] getNoRoomAttributedStrings(Item item) {
+		AttributedString[] as = new AttributedString[2];
+		
+		// The 1st line is like getAttributedStringFor(Item)
+		String prefix = "You found a ";
+		String s = prefix + item.getName() + ", but your";
+		as[0] = new AttributedString(s);
+		Color color = Colors.NEW_ITEM;
+		int start = prefix.length();
+		int end = start + item.getName().length();
+		as[0].addAttribute(TextAttribute.FONT, Message.FONT);
+		as[0].addAttribute(TextAttribute.FOREGROUND, color, start, end);
+		
+		// the 2nd line reports there is no more room.
+		String inventory = "inventory ";
+		String hasNoRoom = "has no room";
+		String s2 = inventory + hasNoRoom + " for it.";
+		as[1] = new AttributedString(s2);
+		color = Colors.WARNING;
+		start = inventory.length();
+		end = start + hasNoRoom.length();
+		as[1].addAttribute(TextAttribute.FONT, Message.FONT);
+		as[1].addAttribute(TextAttribute.FOREGROUND, color, start, end);
+		return as;
 	}
 	
 	// ***********************************************************************
@@ -456,15 +560,15 @@ public class MapMode extends GameMode
 		
 		// Graphics2D bgGraphics = graphics.getBackgroundGraphics();
 		Graphics2D bgGraphics = graphics.getBackgroundImage().createGraphics();
-		bgGraphics.setRenderingHint(RenderingHints.KEY_ANTIALIASING,
-				RenderingHints.VALUE_ANTIALIAS_ON);
+		// bgGraphics.setRenderingHint(RenderingHints.KEY_ANTIALIASING,
+		// RenderingHints.VALUE_ANTIALIAS_ON);
 		bgGraphics.setRenderingHint(RenderingHints.KEY_RENDERING,
 				RenderingHints.VALUE_RENDER_QUALITY);
 		bgGraphics.drawImage(bgImage, 0, 0, gWidth, gHeight, sx1, sy1, sx2,
 				sy2, null);
-		bgGraphics.setComposite(AlphaComposite.getInstance(
-				AlphaComposite.SRC_OVER, 0.60f));
-		bgGraphics.drawImage(Images.LARGE_SHADOW, 0, 0, null);
+		// bgGraphics.setComposite(AlphaComposite.getInstance(AlphaComposite.SRC_OVER,
+		// 0.60f));
+		// bgGraphics.drawImage(Images.LARGE_SHADOW, 0, 0, null);
 		
 		bgGraphics.dispose();
 		// ***********************************************************
@@ -472,8 +576,8 @@ public class MapMode extends GameMode
 		// ***********************************************************
 		// Graphics2D sGraphics = bgGraphics;
 		Graphics2D sGraphics = graphics.getSpriteImage().createGraphics();
-		sGraphics.setRenderingHint(RenderingHints.KEY_ANTIALIASING,
-				RenderingHints.VALUE_ANTIALIAS_ON);
+		// sGraphics.setRenderingHint(RenderingHints.KEY_ANTIALIASING,
+		// RenderingHints.VALUE_ANTIALIAS_ON);
 		sGraphics.setRenderingHint(RenderingHints.KEY_RENDERING,
 				RenderingHints.VALUE_RENDER_QUALITY);
 		
@@ -504,8 +608,8 @@ public class MapMode extends GameMode
 		// draw lighting.
 		// ******************************************
 		Graphics2D lighting = graphics.getLightingImage().createGraphics();
-		lighting.setRenderingHint(RenderingHints.KEY_ANTIALIASING,
-				RenderingHints.VALUE_ANTIALIAS_ON);
+		// lighting.setRenderingHint(RenderingHints.KEY_ANTIALIASING,
+		// RenderingHints.VALUE_ANTIALIAS_ON);
 		lighting.setRenderingHint(RenderingHints.KEY_RENDERING,
 				RenderingHints.VALUE_RENDER_QUALITY);
 		
@@ -538,8 +642,8 @@ public class MapMode extends GameMode
 		// ******************************************
 		
 		Graphics2D overlay = graphics.getOverlayImage().createGraphics();
-		overlay.setRenderingHint(RenderingHints.KEY_ANTIALIASING,
-				RenderingHints.VALUE_ANTIALIAS_ON);
+		// overlay.setRenderingHint(RenderingHints.KEY_ANTIALIASING,
+		// RenderingHints.VALUE_ANTIALIAS_ON);
 		overlay.setRenderingHint(RenderingHints.KEY_RENDERING,
 				RenderingHints.VALUE_RENDER_QUALITY);
 		
@@ -584,8 +688,9 @@ public class MapMode extends GameMode
 		// Menu Message
 		// *******************************************
 		if (displayMenu) {
-			int mx = hgw;
-			int my = hgh;
+			// center the menu
+			int mx = hgw - primaryMenu.getWidth() / 2;
+			int my = hgh - primaryMenu.getHeight() / 2;
 			primaryMenu.render(lighting, mx, my, 0.75f);
 			// menuMessage.render(lighting, mx, my, 0.75f);
 		}
@@ -668,21 +773,24 @@ public class MapMode extends GameMode
 			
 			switch (m) {
 			case STATUS:
-				showMessage("selected \"" + m.getFormattedName() + "\"", 120);
+				showMessage("selected \"" + m.getFormattedName() + "\"", 120,
+						true);
 				toPreviousMenu();
 				break;
 			case INVENTORY:
 				displayInventoryMenu();
 				break;
 			case SKILLS:
-				showMessage("selected \"" + m.getFormattedName() + "\"", 120);
+				showMessage("selected \"" + m.getFormattedName() + "\"", 120,
+						true);
 				toPreviousMenu();
 				break;
 			case SETTINGS:
 				displaySettingsMenu();
 				break;
 			case SAVE:
-				showMessage("selected \"" + m.getFormattedName() + "\"", 120);
+				showMessage("selected \"" + m.getFormattedName() + "\"", 120,
+						true);
 				toPreviousMenu();
 				break;
 			case QUIT:
@@ -694,7 +802,7 @@ public class MapMode extends GameMode
 		
 		@Override
 		public void cancel() {
-			handleMenuCommand();
+			toPreviousMenu();
 		}
 		
 	}
@@ -755,13 +863,41 @@ public class MapMode extends GameMode
 		String[] innerItems = hero.inventory.getSlotDescriptions();
 		byte outerAlign = Menu.HORIZONTAL;
 		byte innerAlign = Menu.VERTICAL;
-		InventoryMenuResponder outerResponder = new InventoryMenuResponder();
+		InventoryResponder outerResponder = new InventoryResponder();
+		ItemSelectionResponder innerResponder = new ItemSelectionResponder();
 		int width = graphics.getWidth();
 		int height = graphics.getHeight();
-		Menu inventoryMenu = new NestedMenu(title, outerItems, innerItems,
-				outerAlign, innerAlign, outerResponder, null, width, height);
+		NestedMenu inventoryMenu = new NestedMenu(title, outerItems,
+				innerItems, outerAlign, innerAlign, outerResponder,
+				innerResponder, width, height);
+		outerResponder.setNestedMenu(inventoryMenu);
+		innerResponder.setNestedMenu(inventoryMenu);
 		return inventoryMenu;
 		
+	}
+	
+	/**
+	 * Load the given menu with the contents of the given inventory
+	 * 
+	 * @param itemsMenu The Menu to load into.
+	 * @param inventory THe Inventory to load from.
+	 */
+	public void setItemMenuItems(Menu itemsMenu, Inventory<Item> inventory) {
+		String[] menuItems = inventory.getSlotDescriptions();
+		for (int i = 0; i < itemsMenu.getCapacity(); i++) {
+			itemsMenu.setMenuItem(i, menuItems[i]);
+		}
+	}
+	
+	/**
+	 * Set the individual item menu
+	 * 
+	 * @param menu
+	 * @param index
+	 * @param inventory
+	 */
+	public void setItemMenuItem(Menu menu, int index, Inventory<Item> inventory) {
+		menu.setMenuItem(index, inventory.getSlotDesciption(index));
 	}
 	
 	/**
@@ -773,7 +909,7 @@ public class MapMode extends GameMode
 		String hTitle = "Inventory";
 		String[] hMenuItems = InventoryMenuItem.getStringValues();
 		byte hAlign = Menu.HORIZONTAL;
-		InventoryMenuResponder responder = new InventoryMenuResponder();
+		InventoryResponder responder = new InventoryResponder();
 		int width = graphics.getWidth();
 		System.out.println("widthInPixels: ");
 		Menu hMenu = new Menu(hTitle, hMenuItems, hAlign, responder, width, 0);
@@ -787,35 +923,172 @@ public class MapMode extends GameMode
 	 * @author Aaron Carson
 	 * @version Jul 28, 2015
 	 */
-	public class InventoryMenuResponder implements Menu.SelectionResponder
+	public class InventoryResponder implements Menu.SelectionResponder
 	{
+		NestedMenu	menu;
+		
+		/**
+		 * Create a new responder.
+		 * 
+		 * @param menu The nested menu used for this.
+		 */
+		public void setNestedMenu(NestedMenu menu) {
+			this.menu = menu;
+		}
+		
 		@Override
 		public void selectMenuItem(int index) {
-			InventoryMenuItem menuItem = InventoryMenuItem.get(index);
-			if (menuItem == null) return;
-			switch (menuItem) {
-			case USE:
-				System.out.println("use");
+			InventoryMenuItem m = InventoryMenuItem.get(index);
+			if (m == null) return;
+			switch (m) {
+			case INSPECT:
+				menu.setMenuFocus(NestedMenu.NESTED);
 				break;
-			case SWITCH:
-				System.out.println("switch");
+			case USE:
+				menu.setMenuFocus(NestedMenu.NESTED);
+				break;
+			case ORDER:
+				menu.setMenuFocus(NestedMenu.NESTED);
 				break;
 			case SORT:
-				System.out.println("sort");
+				hero.inventory.sort();
+				setItemMenuItems(menu.getNestedMenu(), hero.inventory);
 				break;
 			case TRASH:
-				System.out.println("trash");
+				menu.setMenuFocus(NestedMenu.NESTED);
 				break;
 			}
 			// toPreviousMenu();
-			clearAllMenus();
-			showMessage("selected \"" + menuItem.getFormattedName() + "\"", 120);
+			// clearAllMenus();
+			// showMessage("selected \"" + m.getFormattedName() + "\"", 120,
+			// true);
+			
 		}
 		
 		@Override
 		public void cancel() {
-			handleInventoryCommand();
+			toPreviousMenu();
 		}
+	}
+	
+	/**
+	 * Handles The Inventory NestedMenu selection, including
+	 * 
+	 * @author Aaron Carson
+	 * @version Aug 11, 2015
+	 */
+	public class ItemSelectionResponder implements Menu.SelectionResponder
+	{
+		
+		NestedMenu	inventoryMenu;
+		Menu 		itemMenu;
+		
+		/**
+		 * Create a new responder.
+		 * 
+		 * @param menu The nested menu used for this.
+		 */
+		public void setNestedMenu(NestedMenu menu) {
+			this.inventoryMenu = menu;
+			this.itemMenu = inventoryMenu.getNestedMenu();
+		}
+		
+		@Override
+		public void selectMenuItem(int index) {
+			switch (InventoryMenuItem.get(inventoryMenu.getSelection())) {
+			case INSPECT:
+				inspectItem(hero, index);
+				setItemMenuItem(itemMenu, index, hero.inventory);
+				break;
+			case TRASH:
+				trashItem(hero, index);
+				setItemMenuItem(itemMenu, index, hero.inventory);
+				break;
+			case USE:
+				useItem(hero, index);
+				setItemMenuItem(itemMenu, index, hero.inventory);
+				break;
+			case ORDER:
+				order(hero.inventory, index);
+				break;
+			default:
+			}
+		}
+		
+		@Override
+		public void cancel() {
+			if (itemMenu.hasSavedSelection()) {
+				itemMenu.setSelectionCursor(itemMenu.getSavedSelection());
+				itemMenu.clearSavedSelection();
+
+			}
+			else {
+				this.inventoryMenu.setMenuFocus(NestedMenu.OUTER);
+			}
+		}
+		
+		/**
+		 * Handle the order command for the given selected index.
+		 * 
+		 * @param index The currently selected index. If only no selection has
+		 *        been made, then mark the current selection. Otherwise, swap
+		 *        the current index with the selected index.
+		 * @param inventory The inventory to use.
+		 */
+		public void order(Inventory<Item> inventory, int index) {
+			// make a selection of none made
+			if(!itemMenu.hasSavedSelection()) {
+				itemMenu.saveSelection();
+			}		
+			// swap the next selection with this selection.
+			else {
+				int saved = itemMenu.getSavedSelection();
+				inventory.swap(saved, index);
+				setItemMenuItem(itemMenu, index, inventory);
+				setItemMenuItem(itemMenu, saved, inventory);
+				//itemMenu.setSelectionCursor(saved);
+				itemMenu.clearSavedSelection();
+			}
+		}
+		
+		/**
+		 * Inspect the item store at the given index of the hero's inventory.
+		 * 
+		 * @param hero The character who owns the currently selected inventory.
+		 * @param index The index of the selected item of the current inventory.
+		 */
+		public void inspectItem(Character hero, int index) {
+			Item item = hero.inventory.get(index);
+			String message = item == null ? "empty" : "inspecting " + item.name;
+			MapMode.this.showMessage(message, -1, true);
+		}
+		
+		/**
+		 * Use one item at the index of the hero's inventory. If not usable,
+		 * then an error message is displayed.
+		 * 
+		 * @param hero The character who owns the currently selected inventory.
+		 * @param index The index of the selected item of the current inventory.
+		 */
+		public void useItem(Character hero, int index) {
+			Item item = hero.inventory.remove(index);
+			String message = item == null ? "no item selected" : " used"
+					+ item.name;
+			MapMode.this.showMessage(message, 120, true);
+		}
+		
+		/**
+		 * Trash one item at the index of the hero's inventory.
+		 * 
+		 * @param hero The character who owns the currently selected inventory.
+		 * @param index The index of the selected item of the current inventory.
+		 */
+		public void trashItem(Character hero, int index) {
+			Item item = hero.inventory.remove(index);
+			String message = item == null ? "no item" : "trashed " + item.name;
+			MapMode.this.showMessage(message, 120, true);
+		}
+		
 	}
 	
 	/**
@@ -825,7 +1098,7 @@ public class MapMode extends GameMode
 	 * @version Jul 28, 2015
 	 */
 	public enum InventoryMenuItem implements MenuItem {
-		USE, SWITCH, SORT, TRASH;
+		INSPECT, USE, ORDER, SORT, TRASH;
 		
 		/**
 		 * Get the MenuItem at the given index.
@@ -898,8 +1171,9 @@ public class MapMode extends GameMode
 				Command.OK.release();
 				break;
 			default:
-				//clearAllMenus();
-				//showMessage("selected \"" + menuItem.getFormattedName() + "\"", 120);
+				// clearAllMenus();
+				// showMessage("selected \"" + menuItem.getFormattedName() +
+				// "\"", 120);
 				break;
 			}
 			// toPreviousMenu();
@@ -907,7 +1181,9 @@ public class MapMode extends GameMode
 		}
 		
 		@Override
-		public void cancel() {}
+		public void cancel() {
+			toPreviousMenu();
+		}
 	}
 	
 	/**
@@ -939,6 +1215,8 @@ public class MapMode extends GameMode
 		}
 	}
 	
+	public AttributeMessage	vitals;
+	
 	/**
 	 * Draw the vitals.
 	 * 
@@ -948,30 +1226,20 @@ public class MapMode extends GameMode
 		// System.out.println("vitals!");
 		g.setComposite(AlphaComposite.getInstance(AlphaComposite.SRC_OVER,
 				0.50f));
-		// int fontSize = 8;
-		// g.setFont(new Font("Courier", Font.PLAIN, fontSize));
-		g.setFont(Message.FONT);
-		int windowWidth = (int) (Message.FONT_SIZE * 0.8 * 14);
-		int windowHeight = Message.FONT_SIZE * (4 + 1);
-		
-		g.setColor(Color.BLACK);
-		int windowY = Message.FONT_SIZE / 2;
-		int windowX = graphics.getWidth() - windowWidth - Message.FONT_SIZE / 2;
-		g.fillRect(windowX, windowY, windowWidth, windowHeight);
-		
-		g.setColor(Color.WHITE);
-		int yStep = 1;
-		windowX += tileSize / 2;
-		windowY += tileSize / (Message.FONT_SIZE / 2);
-		g.drawString(hero.getDamageVitals(), windowX, windowY
-				+ Message.FONT_SIZE * yStep++);
-		g.drawString(hero.getHungerVitals(), windowX, windowY
-				+ Message.FONT_SIZE * yStep++);
-		g.drawString(hero.getThirstVitals(), windowX, windowY
-				+ Message.FONT_SIZE * yStep++);
-		g.drawString(hero.getStressVitals(), windowX, windowY
-				+ Message.FONT_SIZE * yStep++);
-		
+		AttributedString[] as = new AttributedString[4];
+		as[0] = new AttributedString(hero.getDamageVitals());
+		as[1] = new AttributedString(hero.getHungerVitals());
+		as[2] = new AttributedString(hero.getThirstVitals());
+		as[3] = new AttributedString(hero.getStressVitals());
+		as[0].addAttribute(TextAttribute.FONT, Message.FONT);
+		as[1].addAttribute(TextAttribute.FONT, Message.FONT);
+		as[2].addAttribute(TextAttribute.FONT, Message.FONT);
+		as[3].addAttribute(TextAttribute.FONT, Message.FONT);
+		vitals = new AttributeMessage(as, Color.WHITE, AttributeMessage.LEFT,
+				true, 0, 0);
+		int x = graphics.getWidth() - vitals.getWidth();
+		int y = 0;
+		vitals.render(g, x, y);
 	}
 	
 	// ***********************************************************************
@@ -981,7 +1249,7 @@ public class MapMode extends GameMode
 	private Menu createInventoryDetailsMenu() {
 		String[] menuItems = hero.inventory.getSlotDescriptions();
 		byte alignment = Menu.VERTICAL;
-		InventoryMenuResponder responder = new InventoryMenuResponder();
+		InventoryResponder responder = new InventoryResponder();
 		Menu hMenu = new Menu(null, menuItems, alignment, responder);
 		return hMenu;
 	}
@@ -989,32 +1257,82 @@ public class MapMode extends GameMode
 	/**
 	 * Set the notification message.
 	 * 
-	 * @param text The text to display. If null, it clears the display.
+	 * @param text The text to display.
 	 * @param framesToDisplay The number of frames to hold the display. If less
 	 *        than 1, it is set to -1, which means it will be held indefinitely.
 	 *        (until player presses "OK").
+	 * @param border if true, displays a border.
 	 */
-	public void showMessage(String text, int framesToDisplay) {
-		if (text == null) {
-			notificationMessage = null;
-			notificationMessageTime = -1;
-		}
-		else {
-			notificationMessage = new SingleLineMessage(text, false);
-			notificationMessageTime = framesToDisplay > 0 ? framesToDisplay
-					: -1;
-		}
+	public void showMessage(String text, int framesToDisplay, boolean border) {
+		AttributeMessage message = new AttributeMessage(text, Color.WHITE, 0,
+				border, 0, 0);
+		showMessage(message, framesToDisplay);
 	}
 	
 	/**
 	 * Set the notification message.
 	 * 
-	 * @param text The text to display. If null, it clears the display. THis
-	 *        message will be displayed indefinitely (until player presses
-	 *        "OK").
+	 * @param text The text to display.
+	 * @param framesToDisplay The number of frames to hold the display. If less
+	 *        than 1, it is set to -1, which means it will be held indefinitely.
+	 *        (until player presses "OK").
 	 */
-	public void setNotificationMessage(String text) {
-		showMessage(text, -1);
+	public void showMessage(String[] strings, int framesToDisplay,
+			boolean border) {
+		AttributeMessage message = new AttributeMessage(strings, Color.WHITE,
+				0, border, 0, 0);
+		showMessage(message, framesToDisplay);
+	}
+	
+	/**
+	 * Set the notification message.
+	 * 
+	 * @param text A single AttributedString to display.
+	 * @param framesToDisplay The number of frames to hold the display. If less
+	 *        than 1, it is set to -1, which means it will be held indefinitely.
+	 *        (until player presses "OK").
+	 */
+	public void showMessage(AttributedString attributedString,
+			int framesToDisplay, boolean border) {
+		AttributeMessage message = new AttributeMessage(attributedString,
+				Color.WHITE, 0, border, 0, 0);
+		showMessage(message, framesToDisplay);
+	}
+	
+	/**
+	 * Set the notification message.
+	 * 
+	 * @param text A single AttributedString to display.
+	 * @param framesToDisplay The number of frames to hold the display. If less
+	 *        than 1, it is set to -1, which means it will be held indefinitely.
+	 *        (until player presses "OK").
+	 */
+	public void showMessage(AttributedString[] attributedStrings,
+			int framesToDisplay, boolean border) {
+		AttributeMessage message = new AttributeMessage(attributedStrings,
+				Color.WHITE, 0, border, 0, 0);
+		showMessage(message, framesToDisplay);
+	}
+	
+	/**
+	 * Clear any messages currently being displayed.
+	 */
+	public void clearMessage() {
+		notificationMessage = null;
+		notificationTime = -1;
+	}
+	
+	/**
+	 * Set the notification message.
+	 * 
+	 * @param text The text to display.
+	 * @param framesToDisplay The number of frames to hold the display. If less
+	 *        than 1, it is set to -1, which means it will be held indefinitely.
+	 *        (until player presses "OK").
+	 */
+	public void showMessage(AttributeMessage message, int framesToDisplay) {
+		notificationMessage = message;
+		notificationTime = framesToDisplay > 0 ? framesToDisplay : -1;
 	}
 	
 	/**
@@ -1027,15 +1345,16 @@ public class MapMode extends GameMode
 	public void drawNotificationMessage(Graphics2D g, int x, int y) {
 		
 		// draw the message.
-		notificationMessage.render(g, x, y);
+		
+		int nx = x - notificationMessage.getWidth() / 2;
+		int ny = y - notificationMessage.getHeight() / 2;
+		notificationMessage.render(g, nx, ny);
 		
 		// Use itemMessageTimer, if specified.
-		if (notificationMessageTime > -1) {
-			notificationMessageTime--;
-			if (notificationMessageTime < 1) {
-				setNotificationMessage(null);
-				// itemMessage = null;
-				// itemMessageTime = -1;
+		if (notificationTime > -1) {
+			notificationTime--;
+			if (notificationTime < 1) {
+				clearMessage();
 			}
 		}
 	}

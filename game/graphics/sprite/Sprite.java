@@ -1,11 +1,11 @@
 package game.graphics.sprite;
 
 import game.graphics.SpriteSheet;
-import game.map.Quad;
 
 import java.awt.Graphics2D;
 
 import utility.Position;
+import utility.Quad;
 
 /**
  * A Sprite is an image that moves about the screen. It may represent the

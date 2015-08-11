@@ -2,10 +2,11 @@ package game.graphics.sprite;
 
 import game.graphics.Images;
 import game.graphics.SpriteSheet;
-import game.map.Quad;
 
 import java.awt.Graphics2D;
 import java.util.Random;
+
+import utility.Quad;
 
 /**
  * Animation Sprites are Sprites with a custom

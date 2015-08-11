@@ -46,6 +46,7 @@ public class Item implements Serializable, Comparable<Item>
 	public final int			stack;
 	public int					tileIndex;
 	public SpriteSheet			spriteSheet;
+	private String				pluralSuffix;
 	
 	/**
 	 * Create a new {@Link Item item}.
@@ -64,6 +65,7 @@ public class Item implements Serializable, Comparable<Item>
 		this.value = value;
 		this.weight = weight;
 		this.stack = stack;
+		this.pluralSuffix = "s";
 		this.tileIndex = tileIndex;
 		
 		// add the element, or throw an exception if it already exists.
@@ -81,6 +83,10 @@ public class Item implements Serializable, Comparable<Item>
 	 */
 	public Item(String name) {
 		this(name, 0, 0, 1);
+	}
+	
+	public String getPluralName(){
+		return name + pluralSuffix;
 	}
 	
 	/**

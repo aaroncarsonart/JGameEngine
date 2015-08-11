@@ -5,19 +5,14 @@ import game.engine.Game;
 import java.awt.BorderLayout;
 import java.awt.Container;
 import java.awt.Cursor;
-import java.awt.GraphicsConfiguration;
+import java.awt.DisplayMode;
 import java.awt.GraphicsDevice;
-import java.awt.GraphicsEnvironment;
 import java.awt.Point;
-import java.awt.Rectangle;
 import java.awt.Toolkit;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.awt.event.KeyEvent;
-import java.awt.geom.Rectangle2D;
 import java.awt.image.BufferedImage;
-import java.util.ArrayList;
-import java.util.List;
 
 import javax.swing.JCheckBoxMenuItem;
 import javax.swing.JFrame;
@@ -118,8 +113,16 @@ public class GameFrame extends JFrame
 			this.dispose();
 			this.setUndecorated(true);
 			this.setAlwaysOnTop(true);
-			// this.getJMenuBar().setVisible(false);
+			
+			// hide the menu bar on Windows
+			if (System.getProperty("os.name").contains("Windows")){
+				this.getJMenuBar().setVisible(false);				
+			}
+
+			listDisplayModes(gd);
 			gd.setFullScreenWindow(this);
+			gd.setDisplayMode(new DisplayMode(GameGraphics.FULLSCREEN_WIDTH, GameGraphics.FULLSCREEN_HEIGHT, 32, DisplayMode.REFRESH_RATE_UNKNOWN));
+
 			this.setVisible(true);
 			hideCursor();
 			
@@ -131,6 +134,19 @@ public class GameFrame extends JFrame
 	}
 	
 
+	public void listDisplayModes(GraphicsDevice gd){
+		double ratio_16x9 = 16.0 / 9;
+		System.out.printf("16x9 ratio: %f\n", ratio_16x9);
+
+		// print each mode.
+		for(DisplayMode d : gd.getDisplayModes()){
+			int width = d.getWidth();
+			int height = d.getHeight();
+			int bitDepth = d.getBitDepth();
+			double ratio = width / (double) height;
+			System.out.printf("%d x %d, %d-bit, ratio: %f\n", width, height, bitDepth, ratio);
+		}
+	}
 	
 	/**
 	 * Helper method to hide the cursor.

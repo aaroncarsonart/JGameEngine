@@ -10,6 +10,7 @@ import java.util.List;
 import java.util.Random;
 
 import utility.Position;
+import utility.Quad;
 
 /**
  * Map represents all data contained in

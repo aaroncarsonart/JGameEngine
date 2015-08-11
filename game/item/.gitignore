@@ -10,3 +10,5 @@
 /GeneralInventory.class
 /ListInventory.class
 /ItemComparator.class
+/SlotInventory.class
+/ItemSlotComparator.class

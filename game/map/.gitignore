@@ -28,3 +28,6 @@
 /MapMode$SettingsMenuItem.class
 /MapMode$SettingsMenuResponder.class
 /MapMode$SettingsResponder.class
+/Orientation.class
+/MapMode$InventoryResponder.class
+/MapMode$ItemSelectionResponder.class

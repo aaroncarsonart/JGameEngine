@@ -6,10 +6,7 @@ public enum Direction {
 	LEFT       ("\u2190"), 
 	UP         ("\u2191"), 
 	RIGHT      ("\u2192"), 
-	DOWN       ("\u2193"), 
-	HORIZONTAL ("\u2194"), 
-	VERTICAL   ("\u2195"), 
-	NONE       (" ");
+	DOWN       ("\u2193");
 	
 	private String	unicode;
 	
@@ -38,9 +35,7 @@ public enum Direction {
 		case RIGHT:      return LEFT;
 		case UP:         return DOWN;
 		case DOWN:       return UP;
-		case HORIZONTAL: return VERTICAL;
-		case VERTICAL:   return HORIZONTAL;
-		default:         return NONE;
+		default:		return DOWN;
 		}
 	}
 	

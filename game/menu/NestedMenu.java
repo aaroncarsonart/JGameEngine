@@ -4,8 +4,10 @@ import java.awt.Graphics2D;
 
 public class NestedMenu extends Menu
 {
-	private Menu	nestedMenu;
-	private Menu	focusedMenu;
+	private Menu			nestedMenu;
+	private Menu			focusedMenu;
+	public static final int	OUTER	= 22;
+	public static final int	NESTED	= 44;
 	
 	/**
 	 * Create a new NestedMenu, comprised of a primary menu wrapped around a
@@ -86,31 +88,78 @@ public class NestedMenu extends Menu
 	
 	@Override
 	public void render(Graphics2D g, int x, int y, float alpha) {
-		if (this.getAlignment() == Menu.HORIZONTAL) {			
+		if (this.getAlignment() == Menu.HORIZONTAL) {
 			// render outer menu.
 			int ox = x;
-			int oy = y - nestedMenu.getHeight() / 2;
+			int oy = y;
+			// int oy = y - nestedMenu.getHeight() / 2;
 			super.render(g, ox, oy, alpha);
 			
 			// render nested menu.
 			int ix = x;
-			int iy = y + super.getHeight() / 2;
+			// int iy = y + super.getHeight() / 2;
+			int iy = y + super.getHeight();
 			nestedMenu.render(g, ix, iy, alpha);
 		}
-		else{
+		else {
 			// render outer menu.
-			int ox = x - nestedMenu.getWidth() / 2;
+			// int ox = x - nestedMenu.getWidth() / 2;
+			int ox = x;
 			int oy = y;
 			super.render(g, ox, oy, alpha);
 			
 			// render nested menu.
-			int ix = x + super.getWidth() / 2;
+			// int ix = x + super.getWidth() / 2;
+			int ix = x + super.getWidth();
 			int iy = y;
-			nestedMenu.render(g, ix, iy, alpha);			
+			nestedMenu.render(g, ix, iy, alpha);
 		}
 	}
 	
-	public void listen(){
+	/**
+	 * Set the menu focus.
+	 * @param menu either OUTER or NESTED
+	 */
+	public void setMenuFocus(int menu) {
+		switch (menu) {
+		//@formatter:off
+		case OUTER: 
+			focusedMenu = this;	
+			nestedMenu.setRenderCursor(false);	
+			break;
+		case NESTED: 
+			focusedMenu = nestedMenu; 
+			focusedMenu.setRenderCursor(true);
+			focusedMenu.setSelectionCursor(0);
+			break;
+		//Wformatter:on
+		}
+	}
+	
+	/**
+	 * Check if the nested menu is focused.
+	 * @return True, if the nested menu is focused.
+	 */
+	public boolean isNestedMenuFocused(){
+		return focusedMenu == nestedMenu;
+	}
+	
+	/**
+	 * Check if the outer menu is focused.
+	 * @return True, if the outer menu is focused.
+	 */
+	public boolean isOuterMenuFocused(){
+		return focusedMenu == this;
+	}
+
+	@Override
+	public void cancel(){
+		if (focusedMenu == this) super.cancel();
+		else nestedMenu.cancel();		
+	}
+	
+	@Override
+	public void listen() {
 		if (focusedMenu == this) super.listen();
 		else nestedMenu.listen();
 	}

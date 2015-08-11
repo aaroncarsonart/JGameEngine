@@ -25,7 +25,7 @@ public class WindowBorderRenderer
 	 * @param quad The quad defining what size to render.
 	 */
 	public WindowBorderRenderer() {
-		this.spriteSheet = new SpriteSheet(Images.MENU_BORDER, 8);
+		this.spriteSheet = new SpriteSheet(Images.MENU_BORDER_2, 8);
 		top = 1;
 		bottom = 1 + spriteSheet.getWidth() * 2;
 		left = 0 + spriteSheet.getWidth() * 1;
@@ -51,29 +51,43 @@ public class WindowBorderRenderer
 		// draw the edges.
 		int tileWidth = spriteSheet.getTileWidth();
 		int tileHeight = spriteSheet.getTileWidth();
-		//int widthInTiles = image.getWidth() / tileWidth;
-		//int heightInTiles = image.getHeight() / tileHeight;
+
 		int tx, ty;
 		int xMax = x + width - tileWidth;
 		int yMax = y + height - tileHeight;
-
-		// draw along the top and bottom.
-		for (tx = x + tileWidth; tx < x + width - tileWidth; tx += tileWidth) {
+		
+		// ********************************
+		// draw along the top and bottom.	
+		// ********************************
+		for (tx = x + tileWidth; tx < x + width - (tileWidth * 2); tx += tileWidth) {
 			ty = y;
 			spriteSheet.render(g, top, tx, ty);
 			ty = yMax;
 			spriteSheet.render(g, bottom, tx, ty);
 		}
+		// draw last tile offset, to prevent overlapping
+		spriteSheet.render(g, top, x + width - (tileWidth * 2), y);
+		spriteSheet.render(g, bottom, x + width - (tileWidth * 2), yMax);
+		
 
+		// ********************************
 		// draw along the left and right.
-		for (ty = y + tileWidth; ty < y + height - tileHeight; ty += tileHeight) {
+		// ********************************
+		for (ty = y + tileWidth; ty < y + height - (tileHeight * 2); ty += tileHeight) {
 			tx = x;
 			spriteSheet.render(g, left, tx, ty);
 			tx = xMax;
 			spriteSheet.render(g, right, tx, ty);
 		}
 		
+		// draw last tile offset, to prevent overlapping.
+		spriteSheet.render(g, left, x, y + height - (tileHeight * 2));
+		spriteSheet.render(g, right, xMax, y + height - (tileHeight * 2));
+		
+		
+		// ********************************
 		// draw the four corners.
+		// ********************************
 		spriteSheet.render(g, topLeft, x, y);
 		spriteSheet.render(g, topRight, xMax, y);
 		spriteSheet.render(g, bottomLeft, x, yMax);

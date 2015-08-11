@@ -4,7 +4,6 @@ import game.engine.Command;
 import game.engine.Game;
 import game.graphics.Images;
 import game.graphics.SpriteSheet;
-import game.map.Quad;
 
 import java.awt.Graphics2D;
 import java.awt.image.BufferedImage;
@@ -12,6 +11,7 @@ import java.util.Stack;
 
 import utility.Direction;
 import utility.Position;
+import utility.Quad;
 
 /**
  * A WalkingSprite represents a walking animation used by a player or enemy. All
