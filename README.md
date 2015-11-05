@@ -1,11 +1,16 @@
 # JGameEngine
 ##### By Aaron Carson
-###### README was last updated on: 11/05/2015
+
+#### Quick Links:
+* [Description](https://github.com/aaroncarsonart/JGameEngine/blob/update/README.md#1-description)
+* [Demo](https://github.com/aaroncarsonart/JGameEngine/blob/update/README.md#2-demo)
+* [Features](https://github.com/aaroncarsonart/JGameEngine/blob/update/README.md#3-features)
+* [Controls](https://github.com/aaroncarsonart/JGameEngine/blob/update/README.md#4-controls)
+* [Screenshots](https://github.com/aaroncarsonart/JGameEngine/blob/update/README.md#5-screenshots)
 
 ![Image of JGameEngine](https://raw.githubusercontent.com/aaroncarsonart/JGameEngine/update/demo/01.png)
 
-A screenshot demonstrating the procedurally generated map with lighting effects, the hero, and some collectable items, as well as the mini-map and the vital stat display.
-
+_A screenshot demonstrating the procedurally generated map with lighting effects, the hero, and some collectable items, as well as the mini-map and the vital stat display._
 
 ### 1. Description
 
@@ -60,15 +65,15 @@ Here are more screenshots demonstrating some of the game's Inventory features:
 
 ![Too many items ...](https://raw.githubusercontent.com/aaroncarsonart/JGameEngine/update/demo/04.png)
 
-Trying to collect that sword, but the player's inventory is full.
+_Trying to collect that sword, but the player's inventory is full._
 
 
 ![A custom in-game menu.](https://raw.githubusercontent.com/aaroncarsonart/JGameEngine/update/demo/02.png)
 
-A view of the Main Menu.  `Inventory`, `Settings`, and `Quit` are functional.
+_A view of the Main Menu.  `Inventory`, `Settings`, and `Quit` are functional._
 
 
 ![The Inventory screen. Use, order, sort, and trash your items here!](https://raw.githubusercontent.com/aaroncarsonart/JGameEngine/update/demo/03.png)
 
-A view of the Inventory screen.  `Use` an item removes it from the inventory, but it doesn't have an effect.  `Inspect` will give some detailed info about the item.  `Order` allows you to manually sort and order the items by switching their positions.  `Sort` will algorithmically sort the items alphabetically and stack like items to the maximum allowed amount.  `Trash` trashes the item, removing it from the Inventory.
+_A view of the Inventory screen.  `Use` an item removes it from the inventory, but it doesn't have an effect.  `Inspect` will give some detailed info about the item.  `Order` allows you to manually sort and order the items by switching their positions.  `Sort` will algorithmically sort the items alphabetically and stack like items to the maximum allowed amount.  `Trash` trashes the item, removing it from the Inventory._
 
