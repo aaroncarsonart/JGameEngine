@@ -33,6 +33,7 @@ public class Menu implements Message
 	public static final Color	SELECTION_COLOR	= new Color(100, 100, 255, 120);
 	
 	private String[]			menuItems;
+	private boolean[]			enabled;
 	private SelectionResponder	responder;
 	
 	/** Used by horizontal layouts only. **/
@@ -162,6 +163,30 @@ public class Menu implements Message
 			break;
 		}
 		
+	}
+	
+	private void initializeEnabled(int size){
+		this.enabled = new boolean[size];
+		for(int i = 0; i < size; i++){
+			enabled[i] = true;
+		}
+	}
+	
+	/**
+	 * Enable the MenuItem at the given
+	 * @param index The index of the MenuItem to enable.
+	 */
+	private void enableMenuItem(int index){
+	enabled[index] = true;
+		
+	}
+	
+	/**
+	 * Disable the MenuItem at the given
+	 * @param index The index of the MenuItem to disable.
+	 */
+	private void disableMenuItem(int index){
+		enabled[index] = false;		
 	}
 	
 	/**

@@ -4,10 +4,10 @@ import game.creature.stat.BaseStat;
 import game.creature.stat.Stat;
 import game.creature.stat.VitalStat;
 import game.engine.Game;
-import game.item.Inventory;
+import game.inventory.Inventory;
+import game.inventory.ListInventory;
+import game.inventory.SlotInventory;
 import game.item.Item;
-import game.item.ListInventory;
-import game.item.SlotInventory;
 
 /**
  * Creatures are the base class for anything that moves and can be encountered

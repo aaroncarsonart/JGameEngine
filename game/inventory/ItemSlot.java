@@ -1,9 +1,10 @@
-package game.item;
+package game.inventory;
 
 import exception.TooManyItemsException;
+import game.item.Item;
 
 /**
- * An Item Stack is literally a stack of a single kind of Item.  It associates
+ * An ItemSlot is literally a stack of a single kind of Item.  It associates
  * a given Item with a quantity, and the quantity cannot exceed the Count.
  * @author Aaron Carson
  * @version Jul 23, 2015

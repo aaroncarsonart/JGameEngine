@@ -1,4 +1,4 @@
-package game.item;
+package game.inventory;
 
 import java.util.Comparator;
 

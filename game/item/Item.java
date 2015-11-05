@@ -85,7 +85,7 @@ public class Item implements Serializable, Comparable<Item>
 		this(name, 0, 0, 1);
 	}
 	
-	public String getPluralName(){
+	public String getPluralName() {
 		return name + pluralSuffix;
 	}
 	
@@ -239,6 +239,52 @@ public class Item implements Serializable, Comparable<Item>
 		}
 		
 		return new ArrayList<>();
+	}
+	
+	/**
+	 * The vaid types of Items.
+	 * 
+	 * @author Aaron Carson
+	 * @version Aug 11, 2015
+	 */
+	public enum Type {
+		// regular items
+		ITEM, MAGIC, UNIQUE,
+		
+		// Usables
+		USABLE, CONSUMABLE, FOOD, DRINK, SKILL, SPELL, HEALING, POISON, 
+		
+		// Generic Equipment
+		EQUIPMENT, HAT, CLOTHING, COAT, CLOAK, BOOTS, GLOVES, RING, NECKLACE,
+		EARRINGS,
+		
+		// Battle Equipment
+		WEAPON, ARMOR, TWO_HANDED, SHIELD, HELMET;
+		/*
+		 * Normal ITEMS have no special function except an optional description
+		 * or a sell value. This is the default class with no special behavior.
+		 */
+		/*
+		 * USABLE items have a function when USED. However, any item that is
+		 * USABLE must be an implementing subclass such as FOOD, DRINK, SPELL,
+		 * SKILL, or HEALING.
+		 */
+		/*
+		 * If an Item is CONSUMABLE, it is USABLE but is consumed upon being
+		 * used. it has a set number of uses.
+		 */
+		/*
+		 * FOOD and DRINK can only be used outside of battle. They restore
+		 * Hunger and Thirst. HEALING recovers health; POISON damages you.
+		 */
+		/*
+		 * SKILL and SPELL use a given spell or skill. SPELL items are
+		 * automatically MAGIC items.
+		 */
+		/*
+		 * MAGIC items are enchanted and have a magic elemental property
+		 * attached to them. This doesn't mean it has a SPELL it casts.
+		 */
 	}
 	
 	/**

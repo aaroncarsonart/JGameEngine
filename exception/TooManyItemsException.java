@@ -1,7 +1,7 @@
 package exception;
 
+import game.inventory.ItemSlot;
 import game.item.Item;
-import game.item.ItemSlot;
 
 /**
  * Used to represent when too many items are added to an Inventory Slot.

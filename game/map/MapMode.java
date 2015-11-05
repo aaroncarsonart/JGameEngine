@@ -10,7 +10,7 @@ import game.graphics.SpriteSheet;
 import game.graphics.sprite.ItemSprite;
 import game.graphics.sprite.Sprite;
 import game.graphics.sprite.WalkingSprite;
-import game.item.Inventory;
+import game.inventory.Inventory;
 import game.item.Item;
 import game.menu.AttributeMessage;
 import game.menu.Menu;

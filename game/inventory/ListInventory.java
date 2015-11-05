@@ -1,4 +1,6 @@
-package game.item;
+package game.inventory;
+
+import game.item.Item;
 
 import java.util.ArrayList;
 import java.util.Collection;
