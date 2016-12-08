@@ -218,8 +218,8 @@ public class GameGraphics implements Serializable
 	public void updateComposite() {
 		// draw buffered images directly to volatile image
 		compositeGraphics = compositeImage.createGraphics();
-				//compositeGraphics.setRenderingHint(RenderingHints.KEY_ANTIALIASING,RenderingHints.VALUE_ANTIALIAS_ON);
-				compositeGraphics.setRenderingHint(RenderingHints.KEY_RENDERING,RenderingHints.VALUE_RENDER_QUALITY);
+	    compositeGraphics.setRenderingHint(RenderingHints.KEY_ANTIALIASING,RenderingHints.VALUE_ANTIALIAS_OFF);
+		compositeGraphics.setRenderingHint(RenderingHints.KEY_RENDERING,RenderingHints.VALUE_RENDER_SPEED);
 		
 		int len = imageLayers.length;
 		for (int i = 0; i < len; i++) {
